@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상업·업무용 건물 및 공급 예정 토지</title>
+    <title>부동산 리포트</title>
 
     <!-- Leaflet 지도 엔진 & 엑셀 파서 (지도가 정상 동작한 것과 동일한 CDN으로 통일) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,159 +11,294 @@
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+        :root {
+            --brand: #004986;      /* PANTONE 2186 C, 펄어비스 CI 컬러 */
+            --brand-dark: #013a68;
+            --brand-tint: #e8f1f8;
+            --ink: #222222;        /* Airbnb 스타일 진한 텍스트 */
+            --muted: #717171;      /* Airbnb 스타일 보조 텍스트 */
+            --line: #ebebeb;       /* Airbnb 스타일 옅은 구분선 */
+            --card-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            --card-shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #fafafa; }
 
-        #app-layout { display: flex; width: 100vw; height: 100vh; position: relative; }
+        #app-shell { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
 
-        /* 지도 영역 - 높이 붕괴 방지 */
-        #map-container { flex: 1; height: 100%; position: relative; background: #e2e8f0; }
+        /* ============================== 상단 고정 내비게이션 바 ============================== */
+        #topbar {
+            display: flex; align-items: center; gap: 18px;
+            height: 76px; flex-shrink: 0; padding: 0 22px;
+            background: #ffffff; border-bottom: 1px solid var(--line);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); z-index: 1000; position: relative;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 14px; min-width: 0; flex-shrink: 0; }
+        .brand-logo { height: 26px; width: auto; flex-shrink: 0; }
+        .brand-text { min-width: 0; }
+        .brand-title {
+            font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -0.2px;
+            white-space: nowrap; line-height: 1.25;
+        }
+        .brand-subtitle {
+            font-size: 11.5px; font-weight: 500; color: var(--muted); margin-top: 3px;
+            white-space: nowrap;
+        }
+        .brand-subtitle #header-report-date { font-weight: 600; color: var(--muted); }
+
+        .topbar-center { display: flex; align-items: center; justify-content: center; gap: 14px; flex: 1; min-width: 0; margin-right: 144px; }
+
+        .topbar-search {
+            display: flex; align-items: center; gap: 6px;
+            background: #f7f7f7; border: 1px solid var(--line); border-radius: 999px;
+            padding: 8px 8px 8px 16px; width: 260px; min-width: 150px; flex-shrink: 1;
+        }
+        .topbar-search .search-icon { font-size: 12px; opacity: 0.6; }
+        .topbar-search input { border: none; outline: none; background: transparent; font-size: 12.5px; font-weight: 600; color: var(--ink); flex: 1; }
+        .topbar-search button {
+            border: none; background: var(--brand); color: #fff; border-radius: 999px;
+            padding: 6px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+        .topbar-search button:hover { background: var(--brand-dark); }
+
+        .topbar-stats { display: flex; gap: 8px; flex-shrink: 0; }
+        .stat-pill {
+            display: flex; align-items: baseline; gap: 6px; cursor: pointer;
+            background: var(--brand-tint); border-radius: 999px; padding: 8px 16px;
+            transition: background .15s, transform .15s;
+        }
+        .stat-pill:hover { background: #d9e8f3; transform: translateY(-1px); }
+        .stat-label { font-size: 11.5px; font-weight: 600; color: var(--brand); }
+        .stat-val { font-size: 15px; font-weight: 800; color: var(--brand-dark); }
+
+        .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .map-filter-dropdown { position: absolute; bottom: 16px; left: 16px; z-index: 1000; }
+        .map-filter-btn {
+            background: #ffffff; border: 1px solid var(--line); padding: 10px 16px;
+            border-radius: 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--ink);
+            box-shadow: var(--card-shadow);
+        }
+        .map-filter-btn:hover { background: var(--brand-tint); color: var(--brand); border-color: var(--brand); }
+
+        .compare-float-btn {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 1000;
+            background: var(--ink); color: #fff; border: none; border-radius: 999px;
+            padding: 12px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+            box-shadow: var(--card-shadow-lg); align-items: center; gap: 8px;
+        }
+        .compare-float-btn:hover { background: #000; }
+        .compare-float-count {
+            background: var(--brand); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11.5px; font-weight: 800;
+        }
+
+        .compare-table { display: grid; row-gap: 0; column-gap: 8px; font-size: 12px; }
+        .ct-cell { padding: 10px 6px; border-bottom: 1px solid var(--line); display: flex; align-items: center; }
+        .ct-label { font-weight: 700; color: var(--muted); font-size: 11px; }
+        .ct-head { flex-direction: column; align-items: flex-start; gap: 4px; border-bottom: 2px solid var(--ink); }
+        .ct-head-name { font-weight: 800; color: var(--ink); font-size: 12px; line-height: 1.35; }
+        .ct-remove {
+            border: none; background: #f0f0f0; color: var(--muted); border-radius: 999px;
+            width: 18px; height: 18px; font-size: 10px; cursor: pointer; line-height: 1;
+        }
+        .ct-remove:hover { background: #fee2e2; color: #b91c1c; }
+        .topbar-btn {
+            background: #ffffff; border: 1px solid var(--line); padding: 9px 13px;
+            border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--ink);
+        }
+        .topbar-btn:hover { background: var(--brand-tint); color: var(--brand); border-color: var(--brand); }
+        .topbar-btn.primary { background: var(--brand); color: #fff; border: none; }
+        .topbar-btn.primary:hover { background: var(--brand-dark); }
+
+        .filter-panel {
+            display: none; position: absolute; bottom: calc(100% + 10px); left: 0; z-index: 1000;
+            background: #ffffff; border: 1px solid var(--line); border-radius: 14px;
+            box-shadow: var(--card-shadow-lg); padding: 16px; width: 220px;
+        }
+        .filter-panel.open { display: block; }
+        .filter-group { margin-bottom: 14px; }
+        .filter-group:last-child { margin-bottom: 0; }
+        .filter-group-title { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+        .toggle-item { display: flex; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; margin-bottom: 7px; }
+        .toggle-item:last-child { margin-bottom: 0; }
+        .toggle-item input { margin-right: 8px; width: 15px; height: 15px; accent-color: var(--brand); cursor: pointer; }
+
+        /* 상세 필터: 드롭다운 & 듀얼 레인지 슬라이더 */
+        .filter-select {
+            width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+            font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; cursor: pointer;
+        }
+        .range-slider { position: relative; height: 20px; margin: 12px 2px 6px; }
+        .range-track { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: #e5e5e5; border-radius: 2px; transform: translateY(-50%); }
+        .range-fill { position: absolute; top: 50%; height: 4px; background: var(--brand); border-radius: 2px; transform: translateY(-50%); }
+        .range-input {
+            position: absolute; width: 100%; top: 0; left: 0; margin: 0; height: 20px;
+            background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none;
+        }
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none; pointer-events: auto; width: 15px; height: 15px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--brand); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .range-input::-moz-range-thumb {
+            pointer-events: auto; width: 15px; height: 15px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--brand); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .range-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); font-weight: 700; }
+        .filter-reset-btn {
+            width: 100%; margin-top: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+            background: #ffffff; font-size: 11.5px; font-weight: 700; color: var(--muted); cursor: pointer;
+        }
+        .filter-reset-btn:hover { background: #f7f7f7; color: var(--ink); }
+
+        /* ============================== 본문: 지도 + 상세정보 패널 ============================== */
+        #body-row { flex: 1; display: flex; min-height: 0; position: relative; }
+
+        #map-container { flex: 1; height: 100%; position: relative; background: #f2f2f2; }
         #map { width: 100%; height: 100%; z-index: 1; }
 
-        /* 좌측 상단 KPI 헤더 (기본 확대/축소 버튼과 겹치지 않도록 우측으로 이동) */
-        .kpi-header {
-            position: absolute; top: 16px; left: 60px; z-index: 1000;
-            display: flex; align-items: center; gap: 10px; pointer-events: none;
-        }
-        .kpi-box {
-            pointer-events: auto; background: #ffffff; padding: 10px 16px;
-            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            border: 1px solid #cbd5e1;
-        }
-        .kpi-box.main { background: #0f172a; color: #ffffff; border: none; }
-        .kpi-box[id^="kpi-box-"] { cursor: pointer; transition: box-shadow .15s, transform .15s; }
-        .kpi-box[id^="kpi-box-"]:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.18); transform: translateY(-1px); }
-        .kpi-title { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 2px; }
-        .kpi-val { font-size: 18px; font-weight: 800; color: #0f172a; }
-
-        /* 우측 상단 필터: 자산 구분 / 지도 레이어 - 별도 박스 */
-        .filter-container {
-            position: absolute; top: 16px; right: 16px; z-index: 1000;
-            display: flex; flex-direction: column; gap: 10px; width: 210px;
-        }
-        .filter-box {
-            background: #ffffff; padding: 12px 14px; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12); border: 1px solid #cbd5e1;
-        }
-        .filter-title { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-        .toggle-item { display: flex; align-items: center; font-size: 12.5px; font-weight: 700; color: #1e293b; cursor: pointer; margin-bottom: 6px; }
-        .toggle-item:last-child { margin-bottom: 0; }
-        .toggle-item input { margin-right: 8px; width: 15px; height: 15px; accent-color: #2563eb; cursor: pointer; }
-
-        /* 우측 하단 관리자 툴바 (눈에 덜 띄게) */
-        .admin-bar {
-            position: absolute; bottom: 16px; right: 16px; z-index: 1000;
-            background: rgba(255, 255, 255, 0.9); padding: 6px 8px;
-            border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            display: flex; gap: 5px; border: 1px solid #cbd5e1;
-        }
-        .admin-btn {
-            background: #ffffff; border: 1px solid #cbd5e1; padding: 5px 8px;
-            border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; color: #475569;
-        }
-        .admin-btn:hover { background: #f1f5f9; color: #0f172a; }
-        .admin-btn.save { background: #059669; color: #fff; border: none; }
-        .admin-btn.save:hover { background: #047857; }
-
-        /* 우측 상세 정보 패널 (440px 고정) */
         #sidebar {
-            width: 440px; height: 100%; background: #ffffff;
-            border-left: 1px solid #cbd5e1; display: flex; flex-direction: column;
-            z-index: 1001; box-shadow: -4px 0 16px rgba(0,0,0,0.06);
+            width: 528px; height: 100%; background: #ffffff;
+            border-left: 1px solid var(--line); display: flex; flex-direction: column;
+            z-index: 500; box-shadow: -6px 0 24px rgba(0,0,0,0.05);
         }
-        .sidebar-content { padding: 26px 24px; flex: 1; overflow-y: auto; }
+        .sidebar-content { padding: 28px 26px; flex: 1; overflow-y: auto; }
 
-        /* 상세 UI (참고 이미지와 동일 양식) */
+        /* 상세 UI (Airbnb 리스팅 스타일 참고) */
+        .badge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
         .type-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
-            margin-bottom: 12px;
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
         }
-        .type-badge.land { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-        .type-badge.bldg { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
+        .type-badge.land { background: #fef3e6; color: #b5620a; border: 1px solid #fbdcae; }
+        .type-badge.bldg { background: var(--brand-tint); color: var(--brand); border: 1px solid #cfe0ee; }
 
-        .asset-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.3; }
+        .compare-add-small {
+            border: 1.5px solid var(--brand); background: #ffffff; color: var(--brand);
+            border-radius: 999px; padding: 4px 11px; font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+        .compare-add-small:hover { background: var(--brand-tint); }
+        .compare-add-small.active { background: var(--brand); color: #fff; }
+        .compare-add-small.active:hover { background: var(--brand-dark); }
+
+        .asset-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 18px; letter-spacing: -0.3px; line-height: 1.35; }
 
         .summary-card {
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 16px 18px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr;
+            background: #f7f7f7; border-radius: 16px;
+            padding: 18px 20px; margin-bottom: 26px; display: grid; grid-template-columns: 1fr 1fr;
         }
-        .summary-label { font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
-        .summary-val-blue { font-size: 17px; font-weight: 800; color: #0284c7; }
-        .summary-val-dark { font-size: 17px; font-weight: 800; color: #0f172a; }
+        .summary-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+        .summary-val-blue { font-size: 18px; font-weight: 800; color: var(--brand); }
+        .summary-val-dark { font-size: 18px; font-weight: 800; color: var(--ink); }
 
-        .detail-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; font-size: 13.5px; }
-        .detail-item { display: flex; align-items: baseline; }
-        .detail-label { width: 120px; font-weight: 700; color: #64748b; flex-shrink: 0; }
-        .detail-val { flex: 1; font-weight: 700; color: #0f172a; word-break: keep-all; }
+        .detail-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 26px; font-size: 13.5px; }
+        .detail-item { display: flex; align-items: baseline; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+        .detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .detail-label { width: 120px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+        .detail-val { flex: 1; font-weight: 600; color: var(--ink); word-break: keep-all; }
 
-        .section-subtitle { font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 8px; }
+        .section-subtitle { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
         .opinion-box {
-            background: #f1f5f9; border-radius: 10px; padding: 14px 16px;
-            font-size: 13.5px; line-height: 1.6; color: #1e293b; font-weight: 600;
-            border-left: 4px solid #2563eb;
+            background: #f7f7f7; border-radius: 14px; padding: 16px 18px;
+            font-size: 13.5px; line-height: 1.65; color: #3a3a3a; font-weight: 500;
+            border-left: 3px solid var(--brand);
         }
 
-        .empty-side { text-align:center; color:#94a3b8; margin-top:140px; }
+        /* 인근 실거래가 비교 */
+        .compare-btn {
+            width: 100%; margin-top: 20px; padding: 13px; border: none; border-radius: 12px;
+            background: var(--brand); color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer;
+            transition: background .15s;
+        }
+        .compare-btn:hover { background: var(--brand-dark); }
+        #compare-result { margin-top: 16px; }
+        .compare-loading { font-size: 12.5px; color: var(--muted); padding: 10px 0; }
+        .compare-error { font-size: 12.5px; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; line-height: 1.6; }
+        .compare-summary { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+        .compare-verdict { display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; margin-bottom: 12px; }
+        .verdict-high { background: #fef2f2; color: #b91c1c; }
+        .verdict-mid { background: #ecfdf3; color: #15803d; }
+        .verdict-low { background: var(--brand-tint); color: var(--brand); }
+        .compare-chart-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+        .compare-chart-label { width: 78px; font-size: 11.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+        .compare-chart-track { flex: 1; background: #f0f0f0; border-radius: 999px; height: 18px; position: relative; overflow: hidden; }
+        .compare-chart-bar { height: 100%; border-radius: 999px; }
+        .compare-chart-val { font-size: 11.5px; font-weight: 700; color: var(--ink); width: 88px; text-align: right; flex-shrink: 0; }
+        .compare-samples { margin-top: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid var(--line); padding-top: 10px; }
+        .compare-sample-row { font-size: 11px; color: #3a3a3a; font-weight: 600; padding: 7px 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+
+        .empty-side { text-align:center; color:#a3a3a3; margin-top:140px; }
         .empty-side .icon { font-size:40px; margin-bottom:12px; }
 
         /* 지도 마커 핀 */
         .pin {
-            display: inline-block; padding: 4px 9px; border-radius: 16px;
-            font-size: 11.5px; font-weight: 800; color: #fff; border: 1.5px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; transform: translate(-50%, -50%); cursor: pointer;
+            display: inline-block; padding: 5px 11px; border-radius: 999px;
+            font-size: 11.5px; font-weight: 700; color: #fff; border: 2px solid #fff;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.25); white-space: nowrap; cursor: pointer;
+            transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
+            transform-origin: center center;
         }
-        .pin-land { background: #f97316; }            /* 토지 - 주황 */
-        .pin-bldg { background: #0f172a; }             /* 건물 - 검정 */
+        .pin-land { background: #e8890c; }             /* 토지 - 웜 앰버 */
+        .pin-bldg { background: var(--brand); }          /* 건물 - 브랜드 블루 */
+        .pin-home {
+            display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+            border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a, #000000);
+            border: 2px solid #ffd700; box-shadow: 0 0 0 2px rgba(0,0,0,0.15), 0 3px 10px rgba(0,0,0,0.4);
+            white-space: nowrap; cursor: pointer; z-index: 2000;
+            transform: translate(-50%, -100%) scale(var(--marker-scale, 1));
+            transform-origin: center bottom;
+        }
 
         /* 목록형 사이드바 (KPI 박스 클릭 시) */
-        .list-header { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-        .list-subheader { font-size: 12px; color: #64748b; margin-bottom: 16px; }
-        .asset-list-item {
-            padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px;
-            margin-bottom: 10px; cursor: pointer; transition: background .15s, border-color .15s;
+        .list-header { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+        .list-subheader { font-size: 12px; color: var(--muted); }
+        .list-subheader-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 8px; }
+        .list-sort-select {
+            padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px;
+            font-size: 11.5px; font-weight: 600; color: var(--ink); background: #fff; cursor: pointer;
         }
-        .asset-list-item:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .asset-list-item .row-name { font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 4px; }
-        .asset-list-item .row-meta { font-size: 12px; color: #64748b; line-height: 1.5; }
-        .asset-list-item .row-schedule { font-weight: 700; color: #d97706; }
+        .asset-list-item {
+            padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px;
+            margin-bottom: 12px; cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s;
+            position: relative;
+        }
+        .asset-list-item:hover { background: #fafafa; border-color: #d4d4d4; box-shadow: var(--card-shadow); }
+        .asset-list-item .row-name { font-weight: 700; font-size: 13.5px; color: var(--ink); margin-bottom: 5px; padding-right: 60px; }
+        .asset-list-item .row-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
+        .asset-list-item .row-schedule { font-weight: 700; color: #b5620a; }
+        .row-compare-btn {
+            position: absolute; top: 12px; right: 14px; z-index: 2;
+            border: 1px solid var(--brand); background: #ffffff; color: var(--brand);
+            border-radius: 999px; padding: 3px 10px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+        }
+        .row-compare-btn.active { background: var(--brand); color: #fff; }
+        .row-compare-btn:hover { background: var(--brand-tint); }
+        .row-compare-btn.active:hover { background: var(--brand-dark); }
 
-        .station-tooltip { background: #0f172a !important; color: #fff !important; border: none !important; font-size: 10.5px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 4px !important; }
+        .station-tooltip { background: var(--ink) !important; color: #fff !important; border: none !important; font-size: 10.5px !important; font-weight: 700 !important; padding: 3px 8px !important; border-radius: 6px !important; }
 
         /* ==========================================================================
            모바일 대응 (768px 이하) - PC 레이아웃은 위 규칙 그대로 유지
            ========================================================================== */
         @media (max-width: 768px) {
-            #app-layout { flex-direction: column; }
+            #topbar { flex-wrap: wrap; height: auto; padding: 10px 12px; gap: 8px; }
+            .brand-logo { height: 20px; }
+            .brand-title { font-size: 14px; }
+            .brand-subtitle { font-size: 10px; white-space: normal; }
+            .topbar-center { order: 3; width: 100%; flex-direction: column; flex: none; margin-right: 0; }
+            .topbar-search { width: 100%; }
+            .topbar-actions { order: 2; margin-left: auto; }
+            .stat-pill { padding: 6px 12px; }
+            .stat-val { font-size: 13px; }
+            .topbar-btn { padding: 7px 10px; font-size: 11px; }
 
             /* 지도(위) + 사이드바(아래) 세로 배치 */
-            #map-container { flex: 1 1 auto; min-height: 42vh; }
+            #body-row { flex-direction: column; }
+            #map-container { flex: 1 1 auto; min-height: 38vh; }
             #sidebar {
                 width: 100%; height: 40vh; flex: none;
-                border-left: none; border-top: 1px solid #cbd5e1;
+                border-left: none; border-top: 1px solid var(--line);
             }
             .sidebar-content { padding: 18px 16px; }
-
-            /* 좌측 상단 타이틀/KPI: 줄바꿈 허용, 폭 축소 */
-            .kpi-header { left: 8px; top: 8px; right: 8px; flex-wrap: wrap; gap: 6px; }
-            .kpi-box { padding: 7px 10px; }
-            .kpi-box.main div { white-space: normal !important; }
-            .kpi-box.main { max-width: 190px; }
-            .kpi-box.main div:first-child { font-size: 11.5px !important; }
-            .kpi-box.main div:last-child { font-size: 9.5px !important; }
-            .kpi-title { font-size: 9.5px; }
-            .kpi-val { font-size: 15px; }
-
-            /* 우측 상단 필터: 폭 축소, 타이틀/KPI 영역 아래로 배치해 겹침 방지 */
-            .filter-container { top: 96px; right: 8px; width: 130px; gap: 6px; }
-            .filter-box { padding: 8px 10px; }
-            .filter-title { font-size: 9.5px; margin-bottom: 5px; }
-            .toggle-item { font-size: 11px; margin-bottom: 4px; }
-            .toggle-item input { width: 13px; height: 13px; }
-
-            /* 우하단 관리 툴바: 줄바꿈 허용, 버튼 축소 */
-            .admin-bar { bottom: 8px; right: 8px; left: 8px; flex-wrap: wrap; justify-content: flex-end; }
-            .admin-btn { font-size: 9.5px; padding: 5px 7px; }
 
             /* 자산 상세/목록 폰트 살짝 축소 */
             .asset-title { font-size: 17px; }
@@ -175,55 +310,108 @@
 </head>
 <body>
 
-    <div id="app-layout">
-        <div id="map-container">
-
-            <!-- 좌측 상단 KPI 헤더 -->
-            <div class="kpi-header">
-                <div class="kpi-box main">
-                    <div style="font-size: 13.5px; font-weight: 800; white-space: nowrap;">[부동산 리포트] 상업·업무용 건물 및 공급 예정 토지</div>
-                    <div style="font-size: 10.5px; opacity: 0.8; margin-top:2px; white-space: nowrap;" id="header-report-date">2025-05-01 기준</div>
-                </div>
-                <div class="kpi-box" id="kpi-box-land">
-                    <div class="kpi-title">토지</div>
-                    <div class="kpi-val" id="kpi-land-status">0</div>
-                </div>
-                <div class="kpi-box" id="kpi-box-bldg">
-                    <div class="kpi-title">건물</div>
-                    <div class="kpi-val" id="kpi-bldg-status" style="color:#0284c7;">0</div>
+    <div id="app-shell">
+        <!-- 상단 고정 내비게이션 바 -->
+        <header id="topbar">
+            <div class="topbar-brand">
+                <img class="brand-logo" alt="Pearl Abyss" src="data:image/png;base64,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">
+                <div class="brand-text">
+                    <div class="brand-title">부동산 리포트</div>
+                    <div class="brand-subtitle"><span id="header-report-date">2025-05-01 기준</span></div>
                 </div>
             </div>
 
-            <!-- 우측 상단: 자산 구분 필터 박스 / 지도 레이어 필터 박스 (분리) -->
-            <div class="filter-container">
-                <div class="filter-box">
-                    <div class="filter-title">자산 구분 필터</div>
-                    <label class="toggle-item"><input type="checkbox" id="chk-land" checked>공급 예정 토지</label>
-                    <label class="toggle-item"><input type="checkbox" id="chk-bldg" checked>상업·업무용 건물</label>
+            <div class="topbar-center">
+                <div class="topbar-search">
+                    <span class="search-icon">🔎</span>
+                    <input type="text" id="search-input" placeholder="지역명 또는 자산명 검색" />
+                    <button onclick="runSearch()">검색</button>
                 </div>
-                <div class="filter-box">
-                    <div class="filter-title">지도 레이어 필터</div>
-                    <label class="toggle-item"><input type="checkbox" id="chk-transit" checked>철도망</label>
+
+                <div class="topbar-stats">
+                    <div class="stat-pill" id="kpi-box-land">
+                        <span class="stat-label">토지</span>
+                        <span class="stat-val" id="kpi-land-status">0</span>
+                    </div>
+                    <div class="stat-pill" id="kpi-box-bldg">
+                        <span class="stat-label">건물</span>
+                        <span class="stat-val" id="kpi-bldg-status">0</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- 우측 하단 관리자 툴바 -->
-            <div class="admin-bar">
+            <div class="topbar-actions">
                 <input type="file" id="excel-file" accept=".xlsx, .xls" style="display: none;">
-                <button class="admin-btn" onclick="document.getElementById('excel-file').click()">📂 엑셀 업로드</button>
-                <button class="admin-btn" onclick="downloadSampleExcel()">📥 양식 다운로드</button>
-                <button class="admin-btn save" onclick="saveStandaloneHTML()">💾 HTML 저장</button>
+                <button class="topbar-btn" onclick="document.getElementById('excel-file').click()" title="엑셀 업로드">📂</button>
+                <button class="topbar-btn" onclick="downloadSampleExcel()" title="양식 다운로드">📥</button>
+                <button class="topbar-btn primary" onclick="saveStandaloneHTML()" title="HTML로 저장">💾 저장</button>
+            </div>
+        </header>
+
+        <!-- 본문: 지도 + 상세정보 패널 -->
+        <div id="body-row">
+            <div id="map-container">
+                <div id="map"></div>
+
+                <!-- 지도 좌하단 필터 컨트롤 -->
+                <div class="map-filter-dropdown">
+                    <div class="filter-panel" id="filter-panel">
+                        <div class="filter-group">
+                            <div class="filter-group-title">부동산 유형</div>
+                            <select id="flt-type" class="filter-select">
+                                <option value="ALL">전체</option>
+                                <option value="LAND">토지</option>
+                                <option value="BUILDING">건물</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">공급면적(연면적) 평</div>
+                            <div class="range-slider">
+                                <div class="range-track"><div class="range-fill" id="area-fill"></div></div>
+                                <input type="range" id="area-min" class="range-input">
+                                <input type="range" id="area-max" class="range-input">
+                            </div>
+                            <div class="range-labels"><span id="area-min-label">0평</span><span id="area-max-label">0평</span></div>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">평당가 (만원)</div>
+                            <div class="range-slider">
+                                <div class="range-track"><div class="range-fill" id="price-fill"></div></div>
+                                <input type="range" id="price-min" class="range-input">
+                                <input type="range" id="price-max" class="range-input">
+                            </div>
+                            <div class="range-labels"><span id="price-min-label">0만원</span><span id="price-max-label">0만원</span></div>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">거래 가능 상태</div>
+                            <select id="flt-status" class="filter-select">
+                                <option value="ALL">전체</option>
+                                <option value="공급예정">공급 예정</option>
+                                <option value="매각중">매각 중</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">지도 레이어</div>
+                            <label class="toggle-item"><input type="checkbox" id="chk-transit" checked>철도망</label>
+                        </div>
+                        <button class="filter-reset-btn" onclick="resetAdvancedFilters()">필터 초기화</button>
+                    </div>
+                    <button class="map-filter-btn" onclick="toggleFilterPanel()">☰ 필터</button>
+                </div>
+
+                <!-- 지도 하단 중앙: 비교함 플로팅 버튼 -->
+                <button class="compare-float-btn" id="compare-float-btn" onclick="renderCompareTable()" style="display:none;">
+                    ⚖️ 비교하기 <span class="compare-float-count" id="compare-float-count">0</span>
+                </button>
             </div>
 
-            <div id="map"></div>
-        </div>
-
-        <!-- 우측 상세 정보 사이드바 -->
-        <div id="sidebar">
-            <div class="sidebar-content" id="sidebar-target">
-                <div class="empty-side">
-                    <div class="icon">📌</div>
-                    지도 위의 자산 마커를 클릭하시면<br>상세 정보가 표출됩니다.
+            <!-- 우측 상세 정보 사이드바 -->
+            <div id="sidebar">
+                <div class="sidebar-content" id="sidebar-target">
+                    <div class="empty-side">
+                        <div class="icon">📌</div>
+                        지도 위의 자산 마커를 클릭하시면<br>상세 정보가 표출됩니다.
+                    </div>
                 </div>
             </div>
         </div>
@@ -247,7 +435,8 @@
                     pricePy: "4,800만 원/평",
                     totalPrice: "약 559억 원",
                     center: [37.4093, 127.1001],
-                    opinion: "신분당선 판교역 인근 및 월곶판교선(서판교역) 수혜. 테크 대기업 사옥 수요 최상위."
+                    opinion: "신분당선 판교역 인근 및 월곶판교선(서판교역) 수혜. 테크 대기업 사옥 수요 최상위.",
+                    roadview: ""
                 },
                 {
                     type: "LAND",
@@ -262,7 +451,8 @@
                     pricePy: "최고가 경쟁입찰",
                     totalPrice: "예정가 1,178억 원 추산",
                     center: [37.4872, 127.1025],
-                    opinion: "위례과천선 환승 예정, SRT·GTX-A 복합환승센터 직결 랜드마크 필지."
+                    opinion: "위례과천선 환승 예정, SRT·GTX-A 복합환승센터 직결 랜드마크 필지.",
+                    roadview: ""
                 },
                 {
                     type: "BUILDING",
@@ -281,16 +471,162 @@
                     pricePy: "1,950만 원/평 (연면적 기준)",
                     totalPrice: "578억 원",
                     center: [37.4014, 126.9768],
-                    opinion: "4호선 및 월곶판교선 환승 예정 인덕원역 초인접. 리모델링을 통한 가치 증대 유망."
+                    opinion: "4호선 및 월곶판교선 환승 예정 인덕원역 초인접. 리모델링을 통한 가치 증대 유망.",
+                    roadview: ""
                 }
             ]
         };
     </script>
 
     <script>
+        var currentDetailItem = null;
+        var compareList = [];
+
+        function isInCompare(code) { return compareList.indexOf(code) !== -1; }
+
+        function toggleCompare(code) {
+            var idx = compareList.indexOf(code);
+            if (idx >= 0) {
+                compareList.splice(idx, 1);
+            } else {
+                if (compareList.length >= 3) {
+                    alert('비교함에는 최대 3건까지만 담을 수 있습니다. 기존 항목을 먼저 제거해 주세요.');
+                    return;
+                }
+                compareList.push(code);
+            }
+            updateCompareBadge();
+        }
+
+        function updateCompareBadge() {
+            var badge = document.getElementById('compare-float-btn');
+            if (!badge) return;
+            if (compareList.length > 0) {
+                badge.style.display = 'flex';
+                document.getElementById('compare-float-count').innerText = compareList.length;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderCompareTable() {
+            var items = compareList.map(function(code) {
+                return currentDataset.assets.filter(function(a) { return a.code === code; })[0];
+            }).filter(Boolean);
+
+            if (items.length === 0) {
+                document.getElementById('sidebar-target').innerHTML =
+                    '<div class="empty-side"><div class="icon">⚖️</div>비교함에 담긴 자산이 없습니다.<br>목록 또는 상세정보에서 "비교함에 추가"를 눌러주세요.</div>';
+                return;
+            }
+
+            var rows = [
+                { label: '유형', get: function(a) { return a.type === 'LAND' ? '🌱 토지' : '🏢 건물'; } },
+                { label: '소재지', get: function(a) { return a.address; } },
+                { label: '면적', get: function(a) {
+                    return a.type === 'LAND'
+                        ? (formatNum(a.areaM2) + '㎡ (' + a.areaPy + '평)')
+                        : (formatNum(a.gfaM2) + '㎡ (' + a.gfaPy + '평)');
+                } },
+                { label: '평당가', get: function(a) { return a.pricePy || '-'; } },
+                { label: '총금액', get: function(a) { return a.totalPrice || '-'; } },
+                { label: '일정/준공', get: function(a) { return a.type === 'LAND' ? (a.schedule || '-') : (a.completion || '-'); } },
+                { label: '최근접역', get: function(a) {
+                    var ns = findNearestStation(a.center);
+                    return ns ? (ns.name + '역 · 도보 ' + ns.walkMin + '분') : '-';
+                } },
+                { label: '인근시세 대비', get: function(a) {
+                    return '<span id="verdict-cell-' + a.code + '" style="font-size:11px; color:#a3a3a3;">⏳ 조회 중...</span>';
+                } }
+            ];
+
+            var html = '<div class="list-header">⚖️ 자산 비교 (' + items.length + '건)</div>' +
+                        '<div class="list-subheader">최대 3건까지 나란히 비교할 수 있습니다.</div>' +
+                        '<div class="compare-table" style="grid-template-columns: 68px repeat(' + items.length + ', 1fr);">' +
+                        '<div class="ct-cell ct-label"></div>';
+
+            items.forEach(function(a) {
+                html += '<div class="ct-cell ct-head">' +
+                            '<button class="ct-remove" onclick="toggleCompare(\'' + a.code + '\'); renderCompareTable(); updateCompareBadge();">✕</button>' +
+                            '<div class="ct-head-name">' + a.name + '</div>' +
+                        '</div>';
+            });
+
+            rows.forEach(function(r) {
+                html += '<div class="ct-cell ct-label">' + r.label + '</div>';
+                items.forEach(function(a) { html += '<div class="ct-cell">' + r.get(a) + '</div>'; });
+            });
+
+            html += '</div>' +
+                    '<div style="font-size:10.5px; color:#a3a3a3; margin-top:10px;">※ "인근시세 대비"는 국토교통부 실거래가 오픈API(최근 12개월, 동일 법정동 우선) 기준 참고용 산출값이며, 실제 감정평가를 대체하지 않습니다.</div>';
+            document.getElementById('sidebar-target').innerHTML = html;
+
+            // 비교표 렌더링 후, 각 자산의 인근시세 대비 평가를 비동기로 채워 넣음
+            items.forEach(function(a) { fetchCompareVerdict(a); });
+        }
+
+        // 비교표의 "인근시세 대비" 셀 하나를 채우는 경량 조회 (표시용 요약치만 계산, 상세 목록/그래프는 만들지 않음)
+        function fetchCompareVerdict(item) {
+            var cell = document.getElementById('verdict-cell-' + item.code);
+            if (!cell) return;
+
+            var subjectWon = parsePricePyToWon(item.pricePy);
+            if (!subjectWon) { cell.innerHTML = '<span style="color:#a3a3a3;">가격정보 없음</span>'; return; }
+
+            var lawdCd = guessLawdCode(item.address);
+            if (!lawdCd) { cell.innerHTML = '<span style="color:#a3a3a3;">지역 인식 불가</span>'; return; }
+
+            var type = item.type;
+            var months = recentYearMonths(12);
+            var dongName = extractDongName(item.address);
+
+            Promise.all(months.map(function(ym) { return fetchOneMonth(type, lawdCd, ym).catch(function() { return []; }); }))
+                .then(function(results) {
+                    var all = [].concat.apply([], results);
+                    if (all.length === 0) { cell.innerHTML = '<span style="color:#a3a3a3;">비교자료 없음</span>'; return; }
+
+                    var narrowed = dongName ? all.filter(function(r) { return r.umdNm === dongName; }) : [];
+                    var used = narrowed.length >= 3 ? narrowed : all;
+                    var sixMonthsAgo = monthsAgoYYYYMM(6);
+                    var recentUsed = used.filter(function(r) { return itemYYYYMM(r) >= sixMonthsAgo; });
+                    if (recentUsed.length === 0) { recentUsed = used; }
+
+                    var pricesPy = [];
+                    recentUsed.forEach(function(r) {
+                        var w = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
+                        var a2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
+                        if (w > 0 && a2 > 0) pricesPy.push((w / a2) * 3.3058);
+                    });
+
+                    if (pricesPy.length === 0) { cell.innerHTML = '<span style="color:#a3a3a3;">비교자료 없음</span>'; return; }
+
+                    var avg = pricesPy.reduce(function(s, v) { return s + v; }, 0) / pricesPy.length;
+                    var diffPct = ((subjectWon - avg) / avg) * 100;
+                    var cls, text;
+                    if (diffPct > 15) { cls = 'verdict-high'; text = '고평가 (+' + diffPct.toFixed(1) + '%)'; }
+                    else if (diffPct < -15) { cls = 'verdict-low'; text = '저평가 (' + diffPct.toFixed(1) + '%)'; }
+                    else { cls = 'verdict-mid'; text = '적정 (' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%)'; }
+
+                    cell.innerHTML = '<span class="compare-verdict ' + cls + '" style="margin:0; font-size:11px;">' + text + '</span>';
+                })
+                .catch(function() {
+                    cell.innerHTML = '<span style="color:#a3a3a3;">조회 실패</span>';
+                });
+        }
+
+
         function formatNum(val) {
             if (val === undefined || val === null || val === '') return "-";
-            return Number(val).toLocaleString();
+            var num = Number(String(val).replace(/,/g, ''));
+            return isNaN(num) ? "-" : num.toLocaleString();
+        }
+
+        // "27,000" (만원 단위 문자열) -> "2.7억원" 형태로 변환
+        function formatEok(manwonStr) {
+            var num = Number(String(manwonStr || '').replace(/,/g, ''));
+            if (isNaN(num)) return "-";
+            var eok = num / 10000;
+            return (Math.round(eok * 10) / 10).toLocaleString() + "억원";
         }
 
         function todayReportDate() {
@@ -299,41 +635,359 @@
         }
 
         /* ==========================================================================
-           1. 지하철 5개 노선 전체 역사 데이터 (정식 명칭 사용)
+           국토교통부 실거래가 오픈API 연동 (거래사례비교법)
+           - 주의: apis.data.go.kr는 브라우저 직접 호출 시 CORS로 차단될 수 있습니다.
+             차단되면 아래 fetch가 실패하며, 실패 원인을 화면에 표시합니다.
+           ========================================================================== */
+        var MOLIT_SERVICE_KEY = "d9596730a42fe818ca178082ce2b3872f8d70a4a4400b2d6f3bd9b4cdf54381d";
+        var MOLIT_LAND_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade";
+        var MOLIT_BLDG_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade";
+
+        // 법정동 시군구 코드(행정표준코드, 5자리) - 서울 25개 구 + 경기 남부 주요 시/구
+        // 길게(구체적으로) 일치하는 명칭을 먼저 찾도록 배열 순서를 구체적인 것부터 배치합니다.
+        var LAWD_TABLE = [
+            ["수원시 장안구","41111"],["수원시 권선구","41113"],["수원시 팔달구","41115"],["수원시 영통구","41117"],
+            ["성남시 수정구","41131"],["성남시 중원구","41133"],["성남시 분당구","41135"],
+            ["안양시 만안구","41171"],["안양시 동안구","41173"],
+            ["부천시 원미구","41192"],["부천시 소사구","41194"],["부천시 오정구","41196"],
+            ["안산시 상록구","41271"],["안산시 단원구","41273"],
+            ["고양시 덕양구","41281"],["고양시 일산동구","41285"],["고양시 일산서구","41287"],
+            ["용인시 처인구","41461"],["용인시 기흥구","41463"],["용인시 수지구","41465"],
+            ["화성시","41590"],["평택시","41220"],["의정부시","41150"],["광명시","41210"],
+            ["동두천시","41250"],["과천시","41290"],["구리시","41310"],["남양주시","41360"],
+            ["오산시","41370"],["시흥시","41390"],["군포시","41410"],["의왕시","41430"],
+            ["하남시","41450"],["파주시","41480"],["이천시","41500"],["안성시","41550"],
+            ["김포시","41570"],["광주시","41610"],["양주시","41630"],["포천시","41650"],
+            ["여주시","41670"],["연천군","41800"],["가평군","41820"],["양평군","41830"],
+            ["종로구","11110"],["중구","11140"],["용산구","11170"],["성동구","11200"],["광진구","11215"],
+            ["동대문구","11230"],["중랑구","11260"],["성북구","11290"],["강북구","11305"],["도봉구","11320"],
+            ["노원구","11350"],["은평구","11380"],["서대문구","11410"],["마포구","11440"],["양천구","11470"],
+            ["강서구","11500"],["구로구","11530"],["금천구","11545"],["영등포구","11560"],["동작구","11590"],
+            ["관악구","11620"],["서초구","11650"],["강남구","11680"],["송파구","11710"],["강동구","11740"]
+        ];
+
+        function guessLawdCode(address) {
+            if (!address) return null;
+            for (var i = 0; i < LAWD_TABLE.length; i++) {
+                if (address.indexOf(LAWD_TABLE[i][0]) !== -1) { return LAWD_TABLE[i][1]; }
+            }
+            return null;
+        }
+
+        // 주소에서 법정동(동/읍/면) 이름 추출 (예: "삼평동 642" -> "삼평동")
+        function extractDongName(address) {
+            if (!address) return null;
+            var m = address.match(/([가-힣0-9]+(동|읍|면))\s*[\d]/);
+            return m ? m[1] : null;
+        }
+
+        // 최근 n개월의 계약년월(YYYYMM) 배열 생성
+        function recentYearMonths(n) {
+            var arr = [];
+            var d = new Date();
+            for (var i = 0; i < n; i++) {
+                arr.push(d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0'));
+                d.setMonth(d.getMonth() - 1);
+            }
+            return arr;
+        }
+
+        // 거래 항목의 계약년월을 정수(YYYYMM)로 변환 (최근 N개월 필터링용)
+        function itemYYYYMM(r) { return parseInt(String(r.dealYear) + String(r.dealMonth).padStart(2, '0'), 10); }
+        function monthsAgoYYYYMM(n) {
+            var d = new Date(); d.setMonth(d.getMonth() - n);
+            return d.getFullYear() * 100 + (d.getMonth() + 1);
+        }
+
+        // "4,800만 원/평" 등의 텍스트에서 평당가(원) 추출
+        function parsePricePyToWon(text) {
+            if (!text) return null;
+            var m = text.match(/([\d,]+(?:\.\d+)?)\s*(억|만)?\s*원/);
+            if (!m) return null;
+            var num = parseFloat(m[1].replace(/,/g, ''));
+            if (isNaN(num)) return null;
+            if (m[2] === '억') { num = num * 100000000; }
+            else if (m[2] === '만') { num = num * 10000; }
+            return num;
+        }
+
+        function xmlText(node, tag) {
+            var el = node.getElementsByTagName(tag)[0];
+            return el ? el.textContent.trim() : '';
+        }
+
+        // 국토부 API 1개월치 호출 (XML 파싱)
+        function fetchOneMonth(type, lawdCd, ym) {
+            var url = (type === 'LAND' ? MOLIT_LAND_URL : MOLIT_BLDG_URL) +
+                '?serviceKey=' + MOLIT_SERVICE_KEY +
+                '&LAWD_CD=' + lawdCd + '&DEAL_YMD=' + ym + '&numOfRows=200&pageNo=1';
+
+            return fetch(url).then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            }).then(function(text) {
+                var xml = new DOMParser().parseFromString(text, 'text/xml');
+                var parseErr = xml.getElementsByTagName('parsererror');
+                if (parseErr.length > 0) throw new Error('XML 파싱 실패');
+
+                var resultCode = xmlText(xml, 'resultCode');
+                if (resultCode && resultCode !== '000' && resultCode !== '00') {
+                    throw new Error('API 오류코드 ' + resultCode + ' (' + xmlText(xml, 'resultMsg') + ')');
+                }
+
+                var items = xml.getElementsByTagName('item');
+                var out = [];
+                for (var i = 0; i < items.length; i++) {
+                    var it = items[i];
+                    if (type === 'LAND') {
+                        out.push({
+                            umdNm: xmlText(it, 'umdNm'),
+                            jibun: xmlText(it, 'jibun'),
+                            jimok: xmlText(it, 'jimok'),
+                            dealAmount: xmlText(it, 'dealAmount'),
+                            dealArea: xmlText(it, 'dealArea'),
+                            landUse: xmlText(it, 'landUse'),
+                            dealYear: xmlText(it, 'dealYear'), dealMonth: xmlText(it, 'dealMonth'), dealDay: xmlText(it, 'dealDay')
+                        });
+                    } else {
+                        out.push({
+                            umdNm: xmlText(it, 'umdNm'),
+                            jibun: xmlText(it, 'jibun'),
+                            dealAmount: xmlText(it, 'dealAmount'),
+                            buildingAr: xmlText(it, 'buildingAr'),
+                            buildingUse: xmlText(it, 'buildingUse'),
+                            landUse: xmlText(it, 'landUse'),
+                            buildYear: xmlText(it, 'buildYear'),
+                            dealYear: xmlText(it, 'dealYear'), dealMonth: xmlText(it, 'dealMonth'), dealDay: xmlText(it, 'dealDay')
+                        });
+                    }
+                }
+                return out;
+            });
+        }
+
+        // "인근 실거래가 비교 분석" 토글: 처음 누르면 조회 후 펼침, 다시 누르면 접힘, 또 누르면(캐시 있으면) 재조회 없이 다시 펼침
+        var compareAnalysisCache = {}; // code -> 렌더링된 html (재클릭 시 재조회 방지)
+
+        function toggleMarketComparison() {
+            var resultBox = document.getElementById('compare-result');
+            var chevron = document.getElementById('compare-analysis-chevron');
+            var isOpen = resultBox.style.display !== 'none';
+
+            if (isOpen) {
+                resultBox.style.display = 'none';
+                chevron.innerText = '▾';
+                return;
+            }
+
+            resultBox.style.display = 'block';
+            chevron.innerText = '▴';
+
+            var code = currentDetailItem ? currentDetailItem.code : null;
+            if (code && compareAnalysisCache[code]) {
+                resultBox.innerHTML = compareAnalysisCache[code]; // 캐시된 결과 재사용 (재조회 없음)
+                return;
+            }
+            runMarketComparison();
+        }
+
+        function runMarketComparison() {
+            var item = currentDetailItem;
+            if (!item) return;
+            var resultBox = document.getElementById('compare-result');
+            resultBox.innerHTML = '<div class="compare-loading">🔎 인근 지역 실거래가를 조회하고 있습니다 (최근 12개월)...</div>';
+
+            var lawdCd = guessLawdCode(item.address);
+            if (!lawdCd) {
+                resultBox.innerHTML = '<div class="compare-error">소재지 주소에서 지역(시군구)을 자동으로 인식하지 못했습니다.<br>서울 25개 구 또는 경기 남부 주요 시/구 범위 내 주소인지 확인해 주세요.</div>';
+                return;
+            }
+
+            var type = item.type;
+            var months = recentYearMonths(12);
+            var dongName = extractDongName(item.address);
+
+            Promise.all(months.map(function(ym) { return fetchOneMonth(type, lawdCd, ym).catch(function() { return []; }); }))
+                .then(function(results) {
+                    var all = [].concat.apply([], results);
+                    if (all.length === 0) {
+                        resultBox.innerHTML = '<div class="compare-error">이 환경에서 국토교통부 실거래가 API 호출이 차단되었거나(CORS), 최근 12개월간 해당 지역 거래 데이터가 없습니다.<br>브라우저 개발자도구(F12) → Network 탭에서 실패 원인을 확인해 주세요.</div>';
+                        return;
+                    }
+
+                    // 우선 법정동(umdNm) 일치로 좁히고, 표본이 너무 적으면 시군구 전체로 확대
+                    var narrowed = dongName ? all.filter(function(r) { return r.umdNm === dongName; }) : [];
+                    var used = narrowed.length >= 3 ? narrowed : all;
+                    var scope = narrowed.length >= 3 ? ('법정동 "' + dongName + '" 일치') : '시군구 전체 (동 일치 표본 부족)';
+
+                    // 상단 요약(적정성 판단)은 최근 6개월 거래만으로 계산 (과거 시세 희석 방지)
+                    var sixMonthsAgo = monthsAgoYYYYMM(6);
+                    var recentUsed = used.filter(function(r) { return itemYYYYMM(r) >= sixMonthsAgo; });
+                    if (recentUsed.length === 0) { recentUsed = used; } // 최근 6개월 거래가 없으면 전체 기간으로 대체
+
+                    var pricesPy = [];
+                    recentUsed.forEach(function(r) {
+                        var amountWon = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000; // 만원 -> 원
+                        var areaM2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
+                        if (amountWon > 0 && areaM2 > 0) {
+                            pricesPy.push((amountWon / areaM2) * 3.3058);
+                        }
+                    });
+
+                    if (pricesPy.length === 0) {
+                        resultBox.innerHTML = '<div class="compare-error">거래 건수는 조회되었으나 면적/금액 정보가 불완전해 평당가를 계산할 수 없습니다.</div>';
+                        return;
+                    }
+
+                    pricesPy.sort(function(a, b) { return a - b; });
+                    var avg = pricesPy.reduce(function(s, v) { return s + v; }, 0) / pricesPy.length;
+                    var median = pricesPy[Math.floor(pricesPy.length / 2)];
+
+                    var subjectWon = parsePricePyToWon(item.pricePy);
+
+                    var html = '<div class="compare-summary">비교 범위: ' + scope + ' · 최근 6개월 기준 · 표본 ' + pricesPy.length + '건</div>';
+
+                    if (subjectWon) {
+                        var diffPct = ((subjectWon - avg) / avg) * 100;
+                        var verdictClass = 'verdict-mid', verdictText = '적정 수준';
+                        if (diffPct > 15) { verdictClass = 'verdict-high'; verdictText = '인근 대비 고평가 (+' + diffPct.toFixed(1) + '%)'; }
+                        else if (diffPct < -15) { verdictClass = 'verdict-low'; verdictText = '인근 대비 저평가 (' + diffPct.toFixed(1) + '%)'; }
+                        else { verdictText = '인근 시세와 유사 (' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%)'; }
+                        html += '<div class="compare-verdict ' + verdictClass + '">' + verdictText + '</div>';
+
+                        var maxVal = Math.max(subjectWon, avg) * 1.15;
+                        html += barRow('본 자산', subjectWon, maxVal, '#004986');
+                        html += barRow('인근 평균', avg, maxVal, '#94a3b8');
+                        html += barRow('인근 중앙값', median, maxVal, '#cbd5e1');
+                    } else {
+                        html += '<div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">본 자산의 평당가가 숫자로 인식되지 않아(예: "최고가 경쟁입찰") 직접 비교는 생략합니다.</div>';
+                        var maxVal2 = Math.max.apply(null, pricesPy) * 1.1;
+                        html += barRow('인근 평균', avg, maxVal2, '#94a3b8');
+                        html += barRow('인근 중앙값', median, maxVal2, '#cbd5e1');
+                    }
+
+                    // 월별 평당가 추이 (최근 12개월) - 상단 요약과 동일한 '월' 단위로 집계해 숫자 해석 일관성 유지
+                    var monthlyAvg = months.map(function(ym) {
+                        var ymInt = parseInt(ym, 10);
+                        var mItems = used.filter(function(r) { return itemYYYYMM(r) === ymInt; });
+                        var mPrices = [];
+                        mItems.forEach(function(r) {
+                            var w = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
+                            var a2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
+                            if (w > 0 && a2 > 0) mPrices.push((w / a2) * 3.3058);
+                        });
+                        var mAvg = mPrices.length ? mPrices.reduce(function(s, v) { return s + v; }, 0) / mPrices.length : null;
+                        return { label: ym.slice(4, 6) + '월', avg: mAvg, count: mPrices.length };
+                    }).reverse();
+
+                    html += '<div class="section-subtitle" style="font-size:13px; margin-top:20px;">월별 평당가 추이 (최근 12개월)</div>';
+                    html += renderTrendChart(monthlyAvg);
+
+                    // 최근 거래 목록은 최근 6개월 표본에서 우선 표시 (없으면 전체 기간에서)
+                    var sampleSource = recentUsed.length > 0 ? recentUsed : used;
+                    html += '<div class="compare-samples">';
+                    sampleSource.slice(0, 8).forEach(function(r) {
+                        var areaVal = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
+                        var amountWon2 = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
+                        var pyPrice = (amountWon2 > 0 && areaVal > 0) ? Math.round((amountWon2 / areaVal) * 3.3058 / 10000) : null;
+                        var eokWon = formatEok(r.dealAmount);
+
+                        var line1 = r.dealYear + '.' + r.dealMonth + '.' + r.dealDay + ' · ' + (r.umdNm || '-') + ' ' + (r.jibun || '') +
+                            ' · 거래금액 ' + eokWon + ' · 평당가 ' + (pyPrice !== null ? formatNum(pyPrice) + '만원/평' : '-');
+
+                        var line2 = type === 'LAND'
+                            ? '용도지역 ' + (r.landUse || '-') + ' · 지목 ' + (r.jimok || '-') + ' · 면적 ' + formatNum(r.dealArea) + '㎡'
+                            : '용도지역 ' + (r.landUse || '-') + ' · 건물주용도 ' + (r.buildingUse || '-') + ' · 건축년도 ' + (r.buildYear || '-') + ' · 건물면적 ' + formatNum(r.buildingAr) + '㎡';
+
+                        html += '<div class="compare-sample-row"><div>' + line1 + '</div><div style="color:#94a3b8; margin-top:2px;">' + line2 + '</div></div>';
+                    });
+                    html += '</div>';
+                    html += '<div style="font-size:10.5px; color:#94a3b8; margin-top:8px;">※ 국토교통부 실거래가 오픈API 기반 참고용 산출값이며, 실제 감정평가를 대체하지 않습니다.</div>';
+
+                    resultBox.innerHTML = html;
+                    compareAnalysisCache[item.code] = html; // 다음 토글부터는 재조회 없이 재사용
+                })
+                .catch(function(err) {
+                    resultBox.innerHTML = '<div class="compare-error">실거래가 조회 중 오류가 발생했습니다: ' + err.message + '<br>이 환경(사내망 등)에서 apis.data.go.kr 접속이 차단되어 있을 수 있습니다.</div>';
+                });
+        }
+
+        function barRow(label, value, maxVal, color) {
+            var pct = Math.max(2, Math.min(100, (value / maxVal) * 100));
+            return '<div class="compare-chart-row">' +
+                '<div class="compare-chart-label">' + label + '</div>' +
+                '<div class="compare-chart-track"><div class="compare-chart-bar" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
+                '<div class="compare-chart-val">' + Math.round(value / 10000).toLocaleString() + '만원/평</div>' +
+                '</div>';
+        }
+
+        // 최근 6개월 평당가 추이를 간단한 SVG 라인 차트로 렌더링
+        function renderTrendChart(monthlyAvg) {
+            var valid = monthlyAvg.filter(function(m) { return m.avg !== null; });
+            if (valid.length < 2) {
+                return '<div style="font-size:12px; color:#a3a3a3; margin-bottom:16px;">추이를 그리기엔 월별 거래 표본이 부족합니다.</div>';
+            }
+
+            var W = 460, H = 100, padL = 44, padR = 12, padT = 14, padB = 22;
+            var vals = valid.map(function(m) { return m.avg; });
+            var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+            if (minV === maxV) { minV -= 1; maxV += 1; }
+            var n = monthlyAvg.length;
+            var stepX = (W - padL - padR) / (n - 1);
+
+            function xAt(i) { return padL + stepX * i; }
+            function yAt(v) { return padT + (H - padT - padB) * (1 - (v - minV) / (maxV - minV)); }
+
+            var pathD = '', points = '';
+            var prevValid = false;
+            monthlyAvg.forEach(function(m, i) {
+                if (m.avg === null) { prevValid = false; return; }
+                var x = xAt(i), y = yAt(m.avg);
+                pathD += (prevValid ? ' L ' : ' M ') + x + ' ' + y;
+                points += '<circle cx="' + x + '" cy="' + y + '" r="3.2" fill="#004986"></circle>' +
+                          '<text x="' + x + '" y="' + (y - 8) + '" font-size="9.5" text-anchor="middle" fill="#222222" font-weight="700">' + Math.round(m.avg / 10000) + '</text>';
+                prevValid = true;
+            });
+
+            var labels = monthlyAvg.map(function(m, i) {
+                return '<text x="' + xAt(i) + '" y="' + (H - 4) + '" font-size="10" text-anchor="middle" fill="#717171">' + m.label + '</text>';
+            }).join('');
+
+            return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%; height:auto; margin-bottom:18px;">' +
+                '<path d="' + pathD + '" fill="none" stroke="#004986" stroke-width="2"></path>' +
+                points + labels +
+                '</svg>';
+        }
+
+        /* ==========================================================================
+           1. 수도권 전철 전체 노선 역사 데이터 (서울 1~9호선, 인천 1·2호선, 경의중앙선, 경춘선,
+              수인분당선, 공항철도, 우이신설선, 용인경전철, 의정부경전철, 신분당선, 월곶판교선, 위례과천선)
            ========================================================================== */
         var transitNetwork = [
-            {
-                name: "수도권 전철 1호선", color: "#0052a4",
-                stations: [
-                    {n:"의정부", p:[37.7381, 127.0459]}, {n:"회룡", p:[37.7142, 127.0469]}, {n:"망월사", p:[37.6997, 127.0478]},
-                    {n:"도봉산", p:[37.6895, 127.0462]}, {n:"방학", p:[37.6675, 127.0441]}, {n:"창동", p:[37.6532, 127.0474]},
-                    {n:"석계", p:[37.6158, 127.0655]}, {n:"신이문", p:[37.6018, 127.0676]}, {n:"청량리", p:[37.5807, 127.0479]},
-                    {n:"제기동", p:[37.5781, 127.0347]}, {n:"신설동", p:[37.5753, 127.0248]}, {n:"동대문", p:[37.5714, 127.0097]},
-                    {n:"종로3가", p:[37.5704, 126.9921]}, {n:"시청", p:[37.5657, 126.9772]}, {n:"서울역", p:[37.5546, 126.9706]},
-                    {n:"남영", p:[37.5410, 126.9712]}, {n:"용산", p:[37.5298, 126.9647]}, {n:"노량진", p:[37.5135, 126.9407]},
-                    {n:"대방", p:[37.5133, 126.9264]}, {n:"신길", p:[37.5173, 126.9174]}, {n:"영등포", p:[37.5155, 126.9076]},
-                    {n:"신도림", p:[37.5088, 126.8912]}, {n:"구로", p:[37.5030, 126.8820]}, {n:"가산디지털단지", p:[37.4816, 126.8826]},
-                    {n:"안양", p:[37.4018, 126.9227]}, {n:"금정", p:[37.3722, 126.9434]}, {n:"수원", p:[37.2660, 127.0000]}
-                ]
-            },
-            {
-                name: "수도권 전철 4호선", color: "#00a5de",
-                stations: [
-                    {n:"진접", p:[37.7126, 127.1865]}, {n:"오남", p:[37.6976, 127.1661]}, {n:"별내별가람", p:[37.6678, 127.1165]},
-                    {n:"당고개", p:[37.6702, 127.0790]}, {n:"상계", p:[37.6601, 127.0735]}, {n:"노원", p:[37.6552, 127.0608]},
-                    {n:"창동", p:[37.6532, 127.0474]}, {n:"미아사거리", p:[37.6133, 127.0300]}, {n:"혜화", p:[37.5822, 127.0019]},
-                    {n:"동대문", p:[37.5714, 127.0097]}, {n:"동대문역사문화공원", p:[37.5651, 127.0079]}, {n:"충무로", p:[37.5612, 126.9942]},
-                    {n:"명동", p:[37.5609, 126.9861]}, {n:"서울역", p:[37.5546, 126.9706]}, {n:"삼각지", p:[37.5348, 126.9731]},
-                    {n:"이촌", p:[37.5224, 126.9740]}, {n:"동작", p:[37.5029, 126.9793]}, {n:"총신대입구", p:[37.4867, 126.9823]},
-                    {n:"사당", p:[37.4765, 126.9816]}, {n:"남태령", p:[37.4639, 126.9892]}, {n:"선바위", p:[37.4517, 127.0028]},
-                    {n:"경마공원", p:[37.4440, 127.0071]}, {n:"대공원", p:[37.4354, 127.0065]}, {n:"과천", p:[37.4332, 126.9967]},
-                    {n:"정부과천청사", p:[37.4266, 126.9897]}, {n:"인덕원", p:[37.4014, 126.9768]}, {n:"평촌", p:[37.3943, 126.9639]},
-                    {n:"범계", p:[37.3898, 126.9508]}, {n:"금정", p:[37.3722, 126.9434]}, {n:"산본", p:[37.3596, 126.9332]},
-                    {n:"상록수", p:[37.3028, 126.8665]}, {n:"중앙", p:[37.3159, 126.8385]}, {n:"초지", p:[37.3204, 126.8058]},
-                    {n:"안산", p:[37.3274, 126.7901]}, {n:"정왕", p:[37.3517, 126.7428]}, {n:"오이도", p:[37.3623, 126.7247]}
-                ]
-            },
-            {
+{name:"1호선(경인선)",color:"#0052a4",stations:[{n:"소요산",p:[37.9481,127.061034]},{n:"동두천",p:[37.927878,127.05479]},{n:"보산",p:[37.913702,127.057277]},{n:"동두천중앙",p:[37.901885,127.056482]},{n:"지행",p:[37.892334,127.055716]},{n:"덕정",p:[37.843188,127.061277]},{n:"덕계",p:[37.818486,127.056486]},{n:"양주",p:[37.774381,127.044708]},{n:"녹양",p:[37.75938,127.042292]},{n:"가능",p:[37.748577,127.044213]},{n:"의정부",p:[37.738415,127.045958]},{n:"회룡",p:[37.724846,127.046895]},{n:"망월사",p:[37.709914,127.047455]},{n:"도봉산",p:[37.689313,127.046222]},{n:"도봉",p:[37.679563,127.045595]},{n:"방학",p:[37.667503,127.044273]},{n:"창동",p:[37.653166,127.047731]},{n:"녹천",p:[37.644799,127.051269]},{n:"월계",p:[37.633212,127.058831]},{n:"광운대",p:[37.623632,127.061835]},{n:"석계",p:[37.614805,127.065851]},{n:"신이문",p:[37.601854,127.067325]},{n:"외대앞",p:[37.596073,127.063549]},{n:"회기",p:[37.58946,127.057583]},{n:"청량리",p:[37.580178,127.046835]},{n:"제기동",p:[37.578103,127.034893]},{n:"신설동",p:[37.575297,127.025087]},{n:"동묘앞",p:[37.572627,127.016429]},{n:"동대문",p:[37.57142,127.009745]},{n:"종로5가",p:[37.570926,127.001849]},{n:"종로3가",p:[37.571607,126.991806]},{n:"종각",p:[37.570161,126.982923]},{n:"시청",p:[37.564718,126.977108]},{n:"서울",p:[37.554648,126.972559]},{n:"남영",p:[37.541021,126.9713]},{n:"용산",p:[37.529849,126.964561]},{n:"노량진",p:[37.514219,126.942454]},{n:"대방",p:[37.513342,126.926382]},{n:"신길",p:[37.517122,126.917169]},{n:"영등포",p:[37.515504,126.907628]},{n:"신도림",p:[37.508725,126.891295]},{n:"구로",p:[37.503039,126.881966]},{n:"구일",p:[37.496756,126.870793]},{n:"개봉",p:[37.494594,126.85868]},{n:"오류동",p:[37.494526,126.845365]},{n:"온수",p:[37.492258,126.823388]},{n:"역곡",p:[37.485178,126.811502]},{n:"소사",p:[37.482753,126.79544]},{n:"부천",p:[37.48405,126.782686]},{n:"중동",p:[37.486562,126.764843]},{n:"송내",p:[37.4876,126.753664]},{n:"부개",p:[37.488418,126.74109]},{n:"부평",p:[37.489493,126.724805]},{n:"백운",p:[37.483664,126.707704]},{n:"동암",p:[37.471408,126.702896]},{n:"간석",p:[37.464737,126.694181]},{n:"주안",p:[37.464941,126.679923]},{n:"도화",p:[37.46607,126.668672]},{n:"제물포",p:[37.466769,126.656666]},{n:"도원",p:[37.468446,126.642706]},{n:"동인천",p:[37.475276,126.632802]}]},
+{name:"1호선(경부선)",color:"#0052a4",stations:[{n:"구로",p:[37.503039,126.881966]},{n:"가산디지털단지",p:[37.481072,126.882343]},{n:"독산",p:[37.466613,126.889249]},{n:"금천구청",p:[37.455626,126.89398]},{n:"석수",p:[37.435047,126.902295]},{n:"관악",p:[37.419232,126.908706]},{n:"안양",p:[37.401592,126.922874]},{n:"명학",p:[37.384653,126.935433]},{n:"군포",p:[37.35356,126.948462]},{n:"당정",p:[37.344285,126.948345]},{n:"의왕",p:[37.320852,126.948217]},{n:"성균관대",p:[37.300349,126.97075]},{n:"화서",p:[37.283862,126.989627]},{n:"수원",p:[37.265974,126.999874]},{n:"세류",p:[37.245025,127.013222]},{n:"병점",p:[37.207503,127.032731]},{n:"세마",p:[37.187533,127.04318]},{n:"오산대",p:[37.168953,127.063197]},{n:"오산",p:[37.145885,127.06672]},{n:"진위",p:[37.109447,127.062278]},{n:"송탄",p:[37.075696,127.054301]},{n:"서정리",p:[37.056496,127.052819]},{n:"지제",p:[37.0188,127.070444]},{n:"평택",p:[36.990726,127.085159]},{n:"성환",p:[36.916076,127.126964]},{n:"직산",p:[36.870593,127.143904]},{n:"두정",p:[36.833705,127.14896]},{n:"천안",p:[36.810005,127.146826]},{n:"봉명",p:[36.801215,127.135763]},{n:"쌍용",p:[36.793759,127.1214]},{n:"아산",p:[36.792053,127.104361]},{n:"배방",p:[36.777629,127.052991]},{n:"온양온천",p:[36.780483,127.003249]},{n:"신창",p:[36.769502,126.951108]}]},
+{name:"2호선",color:"#00a84d",stations:[{n:"시청",p:[37.564718,126.977108]},{n:"을지로입구",p:[37.566014,126.982618]},{n:"을지로3가",p:[37.566295,126.99191]},{n:"을지로4가",p:[37.566941,126.998079]},{n:"동대문역사문화공원",p:[37.565138,127.007896]},{n:"신당",p:[37.565972,127.01782]},{n:"상왕십리",p:[37.564354,127.029354]},{n:"왕십리",p:[37.561533,127.037732]},{n:"한양대",p:[37.555273,127.043655]},{n:"뚝섬",p:[37.547184,127.047367]},{n:"성수",p:[37.544581,127.055961]},{n:"건대입구",p:[37.540693,127.07023]},{n:"구의",p:[37.537077,127.085916]},{n:"강변",p:[37.535095,127.094681]},{n:"잠실나루",p:[37.520733,127.10379]},{n:"잠실",p:[37.51395,127.102234]},{n:"잠실새내",p:[37.511687,127.086162]},{n:"종합운동장",p:[37.510997,127.073642]},{n:"삼성",p:[37.508844,127.06316]},{n:"선릉",p:[37.504503,127.049008]},{n:"역삼",p:[37.500622,127.036456]},{n:"강남",p:[37.497175,127.027926]},{n:"교대",p:[37.493415,127.01408]},{n:"서초",p:[37.491897,127.007917]},{n:"방배",p:[37.481426,126.997596]},{n:"사당",p:[37.47653,126.981685]},{n:"낙성대",p:[37.47693,126.963693]},{n:"서울대입구",p:[37.481247,126.952739]},{n:"봉천",p:[37.482362,126.941892]},{n:"신림",p:[37.484201,126.929715]},{n:"신대방",p:[37.487462,126.913149]},{n:"구로디지털단지",p:[37.485266,126.901401]},{n:"대림",p:[37.49297,126.895801]},{n:"신도림",p:[37.508725,126.891295]},{n:"문래",p:[37.517933,126.89476]},{n:"영등포구청",p:[37.52497,126.895951]},{n:"당산",p:[37.53438,126.902281]},{n:"합정",p:[37.549463,126.913739]},{n:"홍대입구",p:[37.557192,126.925381]},{n:"신촌",p:[37.555134,126.936893]},{n:"이대",p:[37.556733,126.946013]},{n:"아현",p:[37.557345,126.956141]},{n:"충정로",p:[37.559973,126.963672]},{n:"시청",p:[37.564718,126.977108]}]},
+{name:"2호선(성수지선)",color:"#00a84d", dash:"6,6",stations:[{n:"성수",p:[37.544581,127.055961]},{n:"용답",p:[37.561904,127.050899]},{n:"신답",p:[37.57004,127.046481]},{n:"용두",p:[37.574028,127.038091]},{n:"신설동",p:[37.575297,127.025087]}]},
+{name:"2호선(신정지선)",color:"#00a84d", dash:"6,6",stations:[{n:"신도림",p:[37.508725,126.891295]},{n:"도림천",p:[37.514287,126.882768]},{n:"양천구청",p:[37.512398,126.865819]},{n:"신정네거리",p:[37.520074,126.852912]},{n:"까치산",p:[37.531768,126.846683]}]},
+{name:"3호선",color:"#ef7c1c",stations:[{n:"대화",p:[37.676087,126.747569]},{n:"주엽",p:[37.670072,126.761334]},{n:"정발산",p:[37.659477,126.773359]},{n:"마두",p:[37.652206,126.77762]},{n:"백석",p:[37.643114,126.78787]},{n:"대곡",p:[37.631626,126.811024]},{n:"화정",p:[37.634592,126.83265]},{n:"원당",p:[37.653324,126.843041]},{n:"원흥",p:[37.650658,126.872642]},{n:"삼송",p:[37.653083,126.895558]},{n:"지축",p:[37.648048,126.913951]},{n:"구파발",p:[37.636763,126.918821]},{n:"연신내",p:[37.619001,126.921008]},{n:"불광",p:[37.610469,126.929887]},{n:"녹번",p:[37.600927,126.935756]},{n:"홍제",p:[37.589066,126.943736]},{n:"무악재",p:[37.582299,126.950291]},{n:"독립문",p:[37.574571,126.957748]},{n:"경복궁",p:[37.575762,126.97353]},{n:"안국",p:[37.576477,126.985443]},{n:"종로3가",p:[37.571607,126.991806]},{n:"을지로3가",p:[37.566295,126.99191]},{n:"충무로",p:[37.561243,126.99428]},{n:"동대입구",p:[37.559052,127.005602]},{n:"약수",p:[37.55434,127.010655]},{n:"금호",p:[37.548034,127.015872]},{n:"옥수",p:[37.540685,127.017965]},{n:"압구정",p:[37.527072,127.028461]},{n:"신사",p:[37.516334,127.020114]},{n:"잠원",p:[37.512759,127.01122]},{n:"고속터미널",p:[37.50481,127.004943]},{n:"교대",p:[37.493415,127.01408]},{n:"남부터미널",p:[37.485013,127.016189]},{n:"양재",p:[37.484147,127.034631]},{n:"매봉",p:[37.486947,127.046769]},{n:"도곡",p:[37.490858,127.055381]},{n:"대치",p:[37.494612,127.063642]},{n:"학여울",p:[37.496663,127.070594]},{n:"대청",p:[37.493514,127.079532]},{n:"일원",p:[37.483681,127.08439]},{n:"수서",p:[37.487371,127.10188]},{n:"가락시장",p:[37.492522,127.118234]},{n:"경찰병원",p:[37.495918,127.12454]},{n:"오금",p:[37.502162,127.128111]}]},
+{name:"4호선",color:"#00a5de",stations:[{n:"당고개",p:[37.670272,127.079066]},{n:"상계",p:[37.660878,127.073572]},{n:"노원",p:[37.655128,127.061368]},{n:"창동",p:[37.653166,127.047731]},{n:"쌍문",p:[37.648627,127.034709]},{n:"수유",p:[37.638052,127.025732]},{n:"미아",p:[37.62667,127.025983]},{n:"미아사거리",p:[37.613292,127.030053]},{n:"길음",p:[37.603407,127.025053]},{n:"성신여대입구",p:[37.592624,127.016403]},{n:"한성대입구",p:[37.588458,127.006221]},{n:"혜화",p:[37.582336,127.001844]},{n:"동대문",p:[37.57142,127.009745]},{n:"동대문역사문화공원",p:[37.565138,127.007896]},{n:"충무로",p:[37.561243,126.99428]},{n:"명동",p:[37.560989,126.986325]},{n:"회현",p:[37.558514,126.978246]},{n:"서울",p:[37.554648,126.972559]},{n:"숙대입구",p:[37.54456,126.972106]},{n:"삼각지",p:[37.534777,126.97311]},{n:"신용산",p:[37.52917,126.967894]},{n:"이촌",p:[37.522272,126.974345]},{n:"동작",p:[37.502971,126.979306]},{n:"총신대입구",p:[37.486263,126.981989]},{n:"사당",p:[37.47653,126.981685]},{n:"남태령",p:[37.463873,126.989134]},{n:"선바위",p:[37.451673,127.002303]},{n:"경마공원",p:[37.443885,127.007888]},{n:"대공원",p:[37.435675,127.006523]},{n:"과천",p:[37.433021,126.996568]},{n:"정부과천청사",p:[37.426513,126.98978]},{n:"인덕원",p:[37.401553,126.976715]},{n:"평촌",p:[37.394287,126.963883]},{n:"범계",p:[37.389793,126.950806]},{n:"금정",p:[37.372221,126.943429]},{n:"산본",p:[37.358101,126.933274]},{n:"대야미",p:[37.328467,126.917332]},{n:"반월",p:[37.312212,126.903524]},{n:"상록수",p:[37.302795,126.866489]},{n:"한대앞",p:[37.309689,126.85344]},{n:"중앙",p:[37.315941,126.838573]},{n:"고잔",p:[37.316777,126.823249]},{n:"초지",p:[37.320646,126.805913]},{n:"안산",p:[37.327082,126.788532]},{n:"신길온천",p:[37.338212,126.765844]},{n:"정왕",p:[37.351735,126.742989]},{n:"오이도",p:[37.362357,126.738714]}]},
+{name:"5호선",color:"#996cac",stations:[{n:"방화",p:[37.577446,126.812741]},{n:"개화산",p:[37.572399,126.806171]},{n:"김포공항",p:[37.562434,126.801058]},{n:"송정",p:[37.561184,126.811973]},{n:"마곡",p:[37.560183,126.825448]},{n:"발산",p:[37.558598,126.837668]},{n:"우장산",p:[37.548768,126.836318]},{n:"화곡",p:[37.541513,126.840461]},{n:"까치산",p:[37.531768,126.846683]},{n:"신정",p:[37.524997,126.856191]},{n:"목동",p:[37.526065,126.864931]},{n:"오목교",p:[37.524496,126.875181]},{n:"양평",p:[37.525648,126.885778]},{n:"영등포구청",p:[37.52497,126.895951]},{n:"영등포시장",p:[37.522669,126.905139]},{n:"신길",p:[37.517122,126.917169]},{n:"여의도",p:[37.521624,126.924191]},{n:"여의나루",p:[37.527098,126.932901]},{n:"마포",p:[37.539574,126.945932]},{n:"공덕",p:[37.544018,126.951592]},{n:"애오개",p:[37.553736,126.95682]},{n:"충정로",p:[37.559973,126.963672]},{n:"서대문",p:[37.565773,126.966641]},{n:"광화문",p:[37.571026,126.976669]},{n:"종로3가",p:[37.571607,126.991806]},{n:"을지로4가",p:[37.566941,126.998079]},{n:"동대문역사문화공원",p:[37.565138,127.007896]},{n:"청구",p:[37.560245,127.013828]},{n:"신금호",p:[37.554548,127.020331]},{n:"행당",p:[37.557322,127.029476]},{n:"왕십리",p:[37.561533,127.037732]},{n:"마장",p:[37.5661,127.042973]},{n:"답십리",p:[37.566747,127.052704]},{n:"장한평",p:[37.56144,127.064623]},{n:"군자",p:[37.557121,127.079542]},{n:"아차산",p:[37.551691,127.089761]},{n:"광나루",p:[37.545303,127.10357]},{n:"천호",p:[37.538397,127.123572]},{n:"강동",p:[37.535804,127.132481]},{n:"길동",p:[37.537801,127.140004]},{n:"굽은다리",p:[37.545477,127.142853]},{n:"명일",p:[37.55137,127.143999]},{n:"고덕",p:[37.555004,127.154151]},{n:"상일동",p:[37.556712,127.166417]}]},
+{name:"5호선(마천지선)",color:"#996cac", dash:"6,6",stations:[{n:"강동",p:[37.535804,127.132481]},{n:"둔촌동",p:[37.527788,127.136248]},{n:"올림픽공원",p:[37.516078,127.130848]},{n:"방이",p:[37.508857,127.126133]},{n:"오금",p:[37.502162,127.128111]},{n:"개롱",p:[37.498079,127.13482]},{n:"거여",p:[37.493105,127.14415]},{n:"마천",p:[37.49499,127.152781]}]},
+{name:"6호선",color:"#cd7c2f",stations:[{n:"응암",p:[37.598605,126.915577]},{n:"역촌",p:[37.606021,126.922744]},{n:"불광",p:[37.610469,126.929887]},{n:"독바위",p:[37.618456,126.933031]},{n:"연신내",p:[37.619001,126.921008]},{n:"구산",p:[37.611377,126.91727]},{n:"새절",p:[37.591148,126.913629]},{n:"증산",p:[37.583876,126.909645]},{n:"월드컵경기장",p:[37.569532,126.899298]},{n:"마포구청",p:[37.563515,126.903343]},{n:"망원",p:[37.556094,126.910052]},{n:"합정",p:[37.549463,126.913739]},{n:"상수",p:[37.547716,126.922852]},{n:"광흥창",p:[37.547456,126.931993]},{n:"대흥",p:[37.547771,126.942069]},{n:"공덕",p:[37.544018,126.951592]},{n:"효창공원앞",p:[37.539261,126.961351]},{n:"삼각지",p:[37.534777,126.97311]},{n:"녹사평",p:[37.534675,126.986695]},{n:"이태원",p:[37.534488,126.994302]},{n:"한강진",p:[37.539631,127.001725]},{n:"버티고개",p:[37.548013,127.007055]},{n:"약수",p:[37.55434,127.010655]},{n:"청구",p:[37.560245,127.013828]},{n:"신당",p:[37.565972,127.01782]},{n:"동묘앞",p:[37.572627,127.016429]},{n:"창신",p:[37.579661,127.015241]},{n:"보문",p:[37.585286,127.019381]},{n:"안암",p:[37.586272,127.029005]},{n:"고려대",p:[37.590508,127.036296]},{n:"월곡",p:[37.601948,127.041518]},{n:"상월곡",p:[37.606377,127.048491]},{n:"돌곶이",p:[37.610537,127.056431]},{n:"석계",p:[37.614805,127.065851]},{n:"태릉입구",p:[37.617983,127.07512]},{n:"화랑대",p:[37.620064,127.084689]},{n:"봉화산",p:[37.617283,127.091401]}]},
+{name:"6호선(신내지선)",color:"#cd7c2f", dash:"6,6",stations:[{n:"봉화산",p:[37.617283,127.091401]},{n:"신내",p:[37.612887,127.103218]}]},
+{name:"7호선",color:"#747f00",stations:[{n:"장암",p:[37.700109,127.053196]},{n:"도봉산",p:[37.689313,127.046222]},{n:"수락산",p:[37.67785,127.055315]},{n:"마들",p:[37.66494,127.057675]},{n:"노원",p:[37.655128,127.061368]},{n:"중계",p:[37.644583,127.064303]},{n:"하계",p:[37.636352,127.06799]},{n:"공릉",p:[37.625742,127.072896]},{n:"태릉입구",p:[37.617983,127.07512]},{n:"먹골",p:[37.610637,127.077725]},{n:"중화",p:[37.602545,127.079264]},{n:"상봉",p:[37.596362,127.085032]},{n:"면목",p:[37.588579,127.087503]},{n:"사가정",p:[37.580894,127.088478]},{n:"용마산",p:[37.573647,127.086727]},{n:"중곡",p:[37.565923,127.08432]},{n:"군자",p:[37.557121,127.079542]},{n:"어린이대공원",p:[37.548014,127.074658]},{n:"건대입구",p:[37.540693,127.07023]},{n:"뚝섬유원지",p:[37.53154,127.066704]},{n:"청담",p:[37.519365,127.05335]},{n:"강남구청",p:[37.517186,127.04128]},{n:"학동",p:[37.514229,127.031656]},{n:"논현",p:[37.511093,127.021415]},{n:"반포",p:[37.508178,127.011727]},{n:"고속터미널",p:[37.50481,127.004943]},{n:"내방",p:[37.487618,126.993513]},{n:"총신대입구",p:[37.486263,126.981989]},{n:"남성",p:[37.484596,126.971251]},{n:"숭실대입구",p:[37.496029,126.953822]},{n:"상도",p:[37.502834,126.94791]},{n:"장승배기",p:[37.504898,126.93915]},{n:"신대방삼거리",p:[37.499701,126.928276]},{n:"보라매",p:[37.499872,126.920428]},{n:"신풍",p:[37.50008,126.90993]},{n:"대림",p:[37.49297,126.895801]},{n:"남구로",p:[37.486056,126.887249]},{n:"가산디지털단지",p:[37.481072,126.882343]},{n:"철산",p:[37.47605,126.867911]},{n:"광명사거리",p:[37.479252,126.854876]},{n:"천왕",p:[37.486637,126.838713]},{n:"온수",p:[37.492258,126.823388]},{n:"까치울",p:[37.506207,126.810939]},{n:"부천종합운동장",p:[37.50538,126.797337]},{n:"춘의",p:[37.503663,126.787036]},{n:"신중동",p:[37.503048,126.77596]},{n:"부천시청",p:[37.504631,126.763538]},{n:"상동",p:[37.505781,126.753083]},{n:"삼산체육관",p:[37.506411,126.742153]},{n:"굴포천",p:[37.506997,126.73128]},{n:"부평구청",p:[37.508336,126.720548]}]},
+{name:"8호선",color:"#e6186c",stations:[{n:"암사",p:[37.55021,127.127562]},{n:"강동구청",p:[37.530341,127.120508]},{n:"몽촌토성",p:[37.517409,127.112359]},{n:"잠실",p:[37.51395,127.102234]},{n:"석촌",p:[37.505431,127.106979]},{n:"송파",p:[37.499703,127.112183]},{n:"가락시장",p:[37.492522,127.118234]},{n:"문정",p:[37.485855,127.1225]},{n:"장지",p:[37.478703,127.126191]},{n:"복정",p:[37.470047,127.126662]},{n:"산성",p:[37.457122,127.149908]},{n:"남한산성입구",p:[37.451535,127.159816]},{n:"단대오거리",p:[37.44521,127.156866]},{n:"신흥",p:[37.440918,127.147564]},{n:"수진",p:[37.437428,127.140722]},{n:"모란",p:[37.43213,127.129087]}]},
+{name:"9호선",color:"#bdb092",stations:[{n:"개화",p:[37.578608,126.798153]},{n:"공항시장",p:[37.563726,126.810678]},{n:"신방화",p:[37.567532,126.816601]},{n:"마곡나루",p:[37.567336,126.829497]},{n:"양천향교",p:[37.568381,126.841333]},{n:"가양",p:[37.561391,126.854456]},{n:"증미",p:[37.557402,126.861939]},{n:"등촌",p:[37.550632,126.865689]},{n:"염창",p:[37.546936,126.874916]},{n:"신목동",p:[37.544277,126.88308]},{n:"선유도",p:[37.53802,126.893525]},{n:"당산",p:[37.53438,126.902281]},{n:"국회의사당",p:[37.528105,126.917874]},{n:"여의도",p:[37.521624,126.924191]},{n:"샛강",p:[37.517274,126.928422]},{n:"노들",p:[37.512887,126.953222]},{n:"노량진",p:[37.514219,126.942454]},{n:"흑석",p:[37.50877,126.963708]},{n:"동작",p:[37.502971,126.979306]},{n:"구반포",p:[37.501364,126.987332]},{n:"신반포",p:[37.503415,126.995925]},{n:"고속터미널",p:[37.50481,127.004943]},{n:"사평",p:[37.504206,127.015259]},{n:"신논현",p:[37.504598,127.02506]},{n:"언주",p:[37.507287,127.033868]},{n:"선정릉",p:[37.51098,127.043593]},{n:"삼성중앙",p:[37.513011,127.053282]},{n:"봉은사",p:[37.514219,127.060245]}]},
+{name:"경의중앙선",color:"#77c4a3",stations:[{n:"문산",p:[37.854619,126.788047]},{n:"파주",p:[37.815298,126.792783]},{n:"월롱",p:[37.796188,126.792587]},{n:"금촌",p:[37.766217,126.774644]},{n:"금릉",p:[37.751322,126.765347]},{n:"운정",p:[37.725826,126.767257]},{n:"야당",p:[37.712327,126.761356]},{n:"탄현",p:[37.694023,126.761086]},{n:"일산",p:[37.682077,126.769846]},{n:"풍산",p:[37.672346,126.786243]},{n:"백마",p:[37.658239,126.794461]},{n:"곡산",p:[37.645676,126.801762]},{n:"능곡",p:[37.618808,126.820783]},{n:"행신",p:[37.612102,126.834146]},{n:"강매",p:[37.612314,126.843223]},{n:"화전",p:[37.602888,126.868387]},{n:"수색",p:[37.580842,126.895611]},{n:"디지털미디어시티",p:[37.576646,126.900984]},{n:"가좌",p:[37.568491,126.915487]},{n:"신촌",p:[37.559783,126.942319]},{n:"서울",p:[37.556328,126.969522]},{n:"용산",p:[37.529849,126.964561]},{n:"이촌",p:[37.522272,126.974345]},{n:"서빙고",p:[37.519594,126.988537]},{n:"한남",p:[37.52943,127.009169]},{n:"옥수",p:[37.540685,127.017965]},{n:"응봉",p:[37.549946,127.034538]},{n:"왕십리",p:[37.561533,127.037732]},{n:"청량리",p:[37.580178,127.046835]},{n:"회기",p:[37.58946,127.057583]},{n:"중랑",p:[37.594917,127.076116]},{n:"상봉",p:[37.596362,127.085032]},{n:"망우",p:[37.59955,127.091909]},{n:"양원",p:[37.606596,127.107906]},{n:"구리",p:[37.603392,127.143869]},{n:"도농",p:[37.608806,127.161153]},{n:"덕소",p:[37.586781,127.208832]},{n:"도심",p:[37.579622,127.222672]},{n:"팔당",p:[37.547371,127.243939]},{n:"운길산",p:[37.554669,127.310115]},{n:"양수",p:[37.545981,127.329098]},{n:"신원",p:[37.525545,127.372921]},{n:"국수",p:[37.516169,127.399367]},{n:"아신",p:[37.51382,127.443173]},{n:"오빈",p:[37.506062,127.473868]},{n:"양평",p:[37.492832,127.491814]},{n:"원덕",p:[37.468672,127.547076]},{n:"용문",p:[37.48223,127.594647]},{n:"지평",p:[37.476444,127.629617]}]},
+{name:"경춘선",color:"#0c8e72",stations:[{n:"청량리",p:[37.580178,127.046835]},{n:"회기",p:[37.58946,127.057583]},{n:"중랑",p:[37.594917,127.076116]},{n:"상봉",p:[37.596362,127.085032]},{n:"망우",p:[37.59955,127.091909]},{n:"신내",p:[37.612887,127.103218]},{n:"갈매",p:[37.634118,127.114757]},{n:"별내",p:[37.64202,127.12684]},{n:"퇴계원",p:[37.648311,127.143952]},{n:"사릉",p:[37.65108,127.176933]},{n:"금곡",p:[37.637382,127.207853]},{n:"평내호평",p:[37.653225,127.244493]},{n:"천마산",p:[37.658978,127.285379]},{n:"마석",p:[37.652782,127.311767]},{n:"대성리",p:[37.684071,127.379319]},{n:"청평",p:[37.735488,127.42661]},{n:"상천",p:[37.770246,127.454821]},{n:"가평",p:[37.814536,127.510739]},{n:"굴봉산",p:[37.832067,127.557695]},{n:"백양리",p:[37.830779,127.58933]},{n:"강촌",p:[37.805723,127.634146]},{n:"김유정",p:[37.818466,127.71434]},{n:"남춘천",p:[37.864007,127.723792]},{n:"춘천",p:[37.885054,127.717023]}]},
+{name:"수인분당선",color:"#f5a200",stations:[{n:"청량리",p:[37.580178,127.046835]},{n:"왕십리",p:[37.561533,127.037732]},{n:"서울숲",p:[37.543617,127.044707]},{n:"압구정로데오",p:[37.527381,127.040534]},{n:"강남구청",p:[37.517186,127.04128]},{n:"선정릉",p:[37.51098,127.043593]},{n:"선릉",p:[37.504503,127.049008]},{n:"한티",p:[37.496237,127.052873]},{n:"도곡",p:[37.490858,127.055381]},{n:"구룡",p:[37.486839,127.058856]},{n:"개포동",p:[37.489116,127.06614]},{n:"대모산입구",p:[37.491373,127.07272]},{n:"수서",p:[37.487371,127.10188]},{n:"복정",p:[37.470047,127.126662]},{n:"가천대",p:[37.448605,127.126697]},{n:"태평",p:[37.440019,127.127709]},{n:"모란",p:[37.43213,127.129087]},{n:"야탑",p:[37.411185,127.128715]},{n:"이매",p:[37.396104,127.12827]},{n:"서현",p:[37.385126,127.123592]},{n:"수내",p:[37.378455,127.114322]},{n:"정자",p:[37.36706,127.108105]},{n:"미금",p:[37.350077,127.10891]},{n:"오리",p:[37.339824,127.108942]},{n:"죽전",p:[37.324753,127.107395]},{n:"보정",p:[37.312752,127.108196]},{n:"구성",p:[37.298969,127.105664]},{n:"신갈",p:[37.286102,127.111313]},{n:"기흥",p:[37.275619,127.115936]},{n:"상갈",p:[37.26181,127.108847]},{n:"청명",p:[37.259489,127.078934]},{n:"영통",p:[37.251568,127.071394]},{n:"망포",p:[37.245795,127.057353]},{n:"매탄권선",p:[37.252759,127.040566]},{n:"수원시청",p:[37.261911,127.030736]},{n:"매교",p:[37.265481,127.015678]},{n:"수원",p:[37.265974,126.999874]},{n:"한대앞",p:[37.309689,126.85344]},{n:"중앙",p:[37.315941,126.838573]},{n:"고잔",p:[37.316777,126.823249]},{n:"초지",p:[37.320646,126.805913]},{n:"달월",p:[37.379681,126.745177]},{n:"월곶",p:[37.391769,126.742699]},{n:"소래포구",p:[37.40095,126.733522]},{n:"인천논현",p:[37.400614,126.722478]},{n:"호구포",p:[37.401637,126.708627]},{n:"남동인더스파크",p:[37.407722,126.695216]},{n:"원인재",p:[37.412603,126.687389]},{n:"연수",p:[37.417804,126.67894]},{n:"송도",p:[37.428514,126.657772]},{n:"인천",p:[37.476691,126.616936]}]},
+{name:"공항철도",color:"#40a2d8",stations:[{n:"서울",p:[37.554648,126.972559]},{n:"공덕",p:[37.544018,126.951592]},{n:"홍대입구",p:[37.557192,126.925381]},{n:"디지털미디어시티",p:[37.576646,126.900984]},{n:"마곡나루",p:[37.567336,126.829497]},{n:"김포공항",p:[37.562434,126.801058]},{n:"계양",p:[37.571462,126.735637]},{n:"검암",p:[37.569104,126.673728]},{n:"청라국제도시",p:[37.555878,126.625327]},{n:"운서",p:[37.492904,126.49379]},{n:"공항화물청사",p:[37.458366,126.476241]},{n:"인천국제공항",p:[37.447464,126.452508]}]},
+{name:"인천1호선",color:"#7cc4a4",stations:[{n:"계양",p:[37.571462,126.735637]},{n:"귤현",p:[37.566379,126.742654]},{n:"박촌",p:[37.553703,126.745077]},{n:"임학",p:[37.545059,126.738665]},{n:"계산",p:[37.543238,126.728128]},{n:"경인교대입구",p:[37.538157,126.722597]},{n:"작전",p:[37.530415,126.722527]},{n:"갈산",p:[37.517268,126.721514]},{n:"부평구청",p:[37.508336,126.720548]},{n:"부평시장",p:[37.498383,126.722244]},{n:"동수",p:[37.485312,126.718247]},{n:"부평삼거리",p:[37.477679,126.710208]},{n:"간석오거리",p:[37.467048,126.707938]},{n:"예술회관",p:[37.449396,126.701012]},{n:"인천시청",p:[37.457405,126.702221]},{n:"석바위시장",p:[37.457611,126.692575]},{n:"모래내시장",p:[37.45583,126.719298]},{n:"인천터미널",p:[37.442383,126.699706]},{n:"문학경기장",p:[37.434935,126.698579]},{n:"선학",p:[37.426684,126.698863]},{n:"신연수",p:[37.41804,126.693863]},{n:"원인재",p:[37.412603,126.687389]},{n:"동춘",p:[37.404737,126.681015]},{n:"동막",p:[37.397878,126.674005]},{n:"캠퍼스타운",p:[37.387855,126.661673]},{n:"테크노파크",p:[37.382268,126.656365]},{n:"지식정보단지",p:[37.378384,126.645168]},{n:"인천대입구",p:[37.386007,126.639484]},{n:"센트럴파크",p:[37.393054,126.634729]},{n:"국제업무지구",p:[37.399907,126.630347]}]},
+{name:"인천2호선",color:"#ed8b00",stations:[{n:"검단오류",p:[37.594877,126.627178]},{n:"왕길",p:[37.59518,126.642696]},{n:"검단사거리",p:[37.60185,126.657108]},{n:"마전",p:[37.597566,126.666998]},{n:"완정",p:[37.592928,126.673203]},{n:"독정",p:[37.585212,126.675844]},{n:"검암",p:[37.569104,126.673728]},{n:"검바위",p:[37.561405,126.677566]},{n:"아시아드경기장",p:[37.5517,126.677122]},{n:"서구청",p:[37.543742,126.676787]},{n:"가정",p:[37.524649,126.675539]},{n:"가정중앙시장",p:[37.517054,126.676672]},{n:"석남",p:[37.506193,126.676203]},{n:"인천가좌",p:[37.4897,126.675208]},{n:"가재울",p:[37.484192,126.683673]},{n:"주안국가산단",p:[37.473703,126.68113]},{n:"주안",p:[37.464941,126.679923]},{n:"시민공원",p:[37.458335,126.681192]},{n:"석바위시장",p:[37.457611,126.692575]},{n:"인천시청",p:[37.457405,126.702221]},{n:"석천사거리",p:[37.456805,126.709986]},{n:"모래내시장",p:[37.45583,126.719298]},{n:"만수",p:[37.454911,126.732094]},{n:"남동구청",p:[37.448161,126.736939]},{n:"인천대공원",p:[37.448769,126.752618]},{n:"운연",p:[37.440127,126.75997]}]},
+{name:"우이신설선",color:"#b0ce18",stations:[{n:"북한산우이",p:[37.663146,127.012789]},{n:"솔밭공원",p:[37.656088,127.013252]},{n:"419민주묘지",p:[37.649593,127.013746]},{n:"가오리",p:[37.641701,127.016792]},{n:"화계",p:[37.634802,127.017519]},{n:"삼양",p:[37.627165,127.018152]},{n:"삼양사거리",p:[37.621512,127.02048]},{n:"솔샘",p:[37.62124,127.013528]},{n:"북한산보국문",p:[37.612343,127.008009]},{n:"정릉",p:[37.602798,127.01349]},{n:"성신여대입구",p:[37.592624,127.016403]},{n:"보문",p:[37.585286,127.019381]},{n:"신설동",p:[37.575297,127.025087]}]},
+{name:"용인경전철",color:"#509fd0",stations:[{n:"기흥",p:[37.275619,127.115936]},{n:"강남대",p:[37.270161,127.126033]},{n:"지석",p:[37.269606,127.136515]},{n:"어정",p:[37.274917,127.143714]},{n:"동백",p:[37.269043,127.152716]},{n:"초당",p:[37.260752,127.159443]},{n:"삼가",p:[37.242115,127.168075]},{n:"시청·용인대",p:[37.239151,127.178406]},{n:"명지대",p:[37.237964,127.190294]},{n:"김량장",p:[37.237247,127.198781]},{n:"운동장·송담대",p:[37.237845,127.209198]},{n:"고진",p:[37.24484,127.214251]},{n:"보평",p:[37.258965,127.218457]},{n:"둔전",p:[37.267051,127.21364]},{n:"전대·에버랜드",p:[37.285342,127.219561]}]},
+{name:"의정부경전철",color:"#31b78d",stations:[{n:"발곡",p:[37.727048,127.052803]},{n:"회룡",p:[37.724846,127.046895]},{n:"범골",p:[37.728755,127.04353]},{n:"경전철의정부",p:[37.737202,127.043257]},{n:"의정부시청",p:[37.739256,127.034781]},{n:"흥선",p:[37.743302,127.037023]},{n:"의정부중앙",p:[37.743676,127.049565]},{n:"동오",p:[37.745271,127.056947]},{n:"새말",p:[37.748885,127.06362]},{n:"경기도청북부청사",p:[37.75059,127.071495]},{n:"효자",p:[37.754025,127.076902]},{n:"곤제",p:[37.750471,127.083715]},{n:"어룡",p:[37.742802,127.085035]},{n:"송산",p:[37.737279,127.087159]}]},
+{
                 name: "신분당선", color: "#d60036",
                 stations: [
                     {n:"신사", p:[37.5164, 127.0205]}, {n:"논현", p:[37.5111, 127.0215]}, {n:"신논현", p:[37.5045, 127.0254]},
@@ -344,7 +998,7 @@
                     {n:"광교", p:[37.2989, 127.0475]}
                 ]
             },
-            {
+{
                 name: "월곶판교선", color: "#059669", dash: "6,6",
                 stations: [
                     {n:"월곶", p:[37.3905, 126.7426]}, {n:"장곡", p:[37.3850, 126.7750]}, {n:"시흥시청", p:[37.3801, 126.8028]},
@@ -354,7 +1008,7 @@
                     {n:"판교", p:[37.3948, 127.1119]}
                 ]
             },
-            {
+{
                 name: "위례과천선", color: "#7c3aed", dash: "6,6",
                 stations: [
                     {n:"정부과천청사", p:[37.4266, 126.9897]}, {n:"문원", p:[37.4330, 127.0090]}, {n:"주암", p:[37.4580, 127.0290]},
@@ -364,6 +1018,33 @@
                 ]
             }
         ];
+
+        /* ==========================================================================
+           1-1. 최근접 지하철역 도보거리 자동 계산 (Haversine 공식)
+           ========================================================================== */
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            var R = 6371;
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLon = (lon2 - lon1) * Math.PI / 180;
+            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function findNearestStation(center) {
+            var best = null, bestDist = Infinity;
+            transitNetwork.forEach(function(line) {
+                line.stations.forEach(function(st) {
+                    var d = haversineKm(center[0], center[1], st.p[0], st.p[1]);
+                    if (d < bestDist) { bestDist = d; best = { name: st.n, line: line.name, distKm: d }; }
+                });
+            });
+            if (!best) return null;
+            best.walkMin = Math.max(1, Math.round(best.distKm / 4.8 * 60)); // 도보 약 4.8km/h 가정
+            best.distM = Math.round(best.distKm * 1000);
+            return best;
+        }
 
         /* ==========================================================================
            2. 지도 초기화 (안정적인 OSM 타일 서버, 외부 fetch 없음)
@@ -381,7 +1062,18 @@
                 '</div>';
         }
 
-        var map = L.map('map').setView([37.4300, 127.0400], 12);
+        var HOME_LOCATION = { name: "펄어비스 홈 원", center: [37.4064817, 126.9833096] };
+
+        var map = L.map('map').setView(HOME_LOCATION.center, 15);
+
+        // 줌 레벨에 따라 마커 크기를 함께 축소/확대 (축소 시 마커 중첩 완화)
+        function updateMarkerScale() {
+            var z = map.getZoom();
+            var scale = Math.max(0.5, Math.min(1.1, (z - 8) / 7));
+            document.documentElement.style.setProperty('--marker-scale', scale);
+        }
+        map.on('zoomend', updateMarkerScale);
+        updateMarkerScale();
 
         var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -404,6 +1096,14 @@
         var bldgLayer = L.layerGroup().addTo(map);
         var transitLayer = L.layerGroup().addTo(map);
 
+        // 회사 위치 마커 (토지/건물과 완전히 구분되는 전용 마커, 필터의 영향을 받지 않음)
+        var homeIcon = L.divIcon({
+            className: '',
+            html: '<div class="pin-home">🏠 ' + HOME_LOCATION.name + '</div>'
+        });
+        L.marker(HOME_LOCATION.center, { icon: homeIcon, zIndexOffset: 2000 }).addTo(map)
+            .bindTooltip(HOME_LOCATION.name, { direction: 'top', className: 'station-tooltip' });
+
         // 철도망 렌더링
         transitNetwork.forEach(function(route) {
             var coords = route.stations.map(function(s) { return s.p; });
@@ -424,10 +1124,14 @@
         function renderSidebarDetail(item) {
             var isLand = item.type === "LAND";
             var html = "";
+            currentDetailItem = item;
+
+            var ns = findNearestStation(item.center);
+            var nsText = ns ? (ns.name + '역 (' + ns.line + ') · 도보 약 ' + ns.walkMin + '분 (' + ns.distM.toLocaleString() + 'm)') : '-';
 
             if (isLand) {
                 html =
-                    '<div class="type-badge land">🌱 공급 예정 토지</div>' +
+                    '<div class="badge-row"><div class="type-badge land">🌱 토지</div>' + compareBtnHtml(item) + '</div>' +
                     '<h1 class="asset-title">' + (item.name || '-') + '</h1>' +
                     '<div class="summary-card">' +
                         '<div><div class="summary-label">예상 토지 평당가</div><div class="summary-val-blue">' + (item.pricePy || '-') + '</div></div>' +
@@ -440,12 +1144,14 @@
                         '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.areaM2) + ' ㎡ (' + (item.areaPy || '-') + '평)</div></div>' +
                         '<div class="detail-item"><div class="detail-label">용도지역/지목</div><div class="detail-val">' + (item.zoning || '-') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">건폐율/용적률</div><div class="detail-val">' + (item.bcrFar || '-') + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">네이버 로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener" style="color:#004986; text-decoration:underline;">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
                     '</div>' +
                     '<div class="section-subtitle">사업성 및 입지 검토 의견</div>' +
                     '<div class="opinion-box">' + (item.opinion || '검토 의견 없음') + '</div>';
             } else {
                 html =
-                    '<div class="type-badge bldg">🏢 상업·업무용 건물</div>' +
+                    '<div class="badge-row"><div class="type-badge bldg">🏢 건물</div>' + compareBtnHtml(item) + '</div>' +
                     '<h1 class="asset-title">' + (item.name || '-') + '</h1>' +
                     '<div class="summary-card">' +
                         '<div><div class="summary-label">연면적 평당가</div><div class="summary-val-blue">' + (item.pricePy || '-') + '</div></div>' +
@@ -454,39 +1160,141 @@
                     '<div class="detail-list">' +
                         '<div class="detail-item"><div class="detail-label">일련번호</div><div class="detail-val">' + (item.code || '-') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">소재지(도로명)</div><div class="detail-val">' + (item.address || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">거래/검토유형</div><div class="detail-val" style="color:#0284c7;">' + (item.dealType || '일반 매각') + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">거래/검토유형</div><div class="detail-val" style="color:#004986;">' + (item.dealType || '일반 매각') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">연면적 (GFA)</div><div class="detail-val">' + formatNum(item.gfaM2) + ' ㎡ (' + (item.gfaPy || '-') + '평)</div></div>' +
                         '<div class="detail-item"><div class="detail-label">건축면적</div><div class="detail-val">' + formatNum(item.bareaM2) + ' ㎡ (' + (item.bareaPy || '-') + '평)</div></div>' +
                         '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.lareaM2) + ' ㎡ (' + (item.lareaPy || '-') + '평)</div></div>' +
                         '<div class="detail-item"><div class="detail-label">건물 규모/층수</div><div class="detail-val">' + (item.floors || '-') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">준공년월</div><div class="detail-val">' + (item.completion || '-') + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">네이버 로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener" style="color:#004986; text-decoration:underline;">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
                     '</div>' +
                     '<div class="section-subtitle">운용 및 투자 포인트</div>' +
                     '<div class="opinion-box">' + (item.opinion || '투자 포인트 없음') + '</div>';
             }
 
+            html += '<button class="compare-btn" id="compare-toggle-analysis-btn" onclick="toggleMarketComparison()">📊 인근 실거래가 비교 분석 <span id="compare-analysis-chevron">▾</span></button>' +
+                    '<div id="compare-result" style="display:none;"></div>';
+
             document.getElementById('sidebar-target').innerHTML = html;
+        }
+
+        // 상단 배지 옆에 붙는 작은 "비교함" 토글 버튼
+        function compareBtnHtml(item) {
+            var inCompare = isInCompare(item.code);
+            return '<button class="compare-add-small' + (inCompare ? ' active' : '') + '" onclick="toggleCompare(\'' + item.code + '\'); renderSidebarDetail(currentDetailItem);">' +
+                    (inCompare ? '✓ 비교함' : '비교함+') +
+                   '</button>';
         }
 
         /* ==========================================================================
            4. 자산 마커 렌더링 및 KPI 계산
            ========================================================================== */
+        /* ==========================================================================
+           4-0. 상세 필터 (부동산 유형 / 면적 / 평당가 / 거래가능상태)
+           ========================================================================== */
+        var advFilter = { type: 'ALL', areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999, status: 'ALL' };
+
+        function getAssetArea(a) { return a.type === 'LAND' ? (a.areaM2 || 0) : (a.gfaM2 || 0); }
+        function getAssetAreaPy(a) { return getAssetArea(a) / 3.3058; }
+        function getAssetPricePyManwon(a) { var w = parsePricePyToWon(a.pricePy); return w ? Math.round(w / 10000) : null; }
+        function getAssetStatus(a) { return a.type === 'LAND' ? '공급예정' : '매각중'; }
+
+        function passesAdvancedFilter(item) {
+            if (advFilter.type !== 'ALL' && item.type !== advFilter.type) return false;
+            var area = getAssetAreaPy(item);
+            if (area > 0 && (area < advFilter.areaMin || area > advFilter.areaMax)) return false;
+            var price = getAssetPricePyManwon(item);
+            if (price !== null && (price < advFilter.priceMin || price > advFilter.priceMax)) return false;
+            if (advFilter.status !== 'ALL' && getAssetStatus(item) !== advFilter.status) return false;
+            return true;
+        }
+
+        function computeFilterBounds() {
+            var areas = currentDataset.assets.map(getAssetAreaPy).filter(function(v) { return v > 0; });
+            var prices = currentDataset.assets.map(getAssetPricePyManwon).filter(function(v) { return v !== null; });
+            return {
+                areaMin: areas.length ? Math.floor(Math.min.apply(null, areas)) : 0,
+                areaMax: areas.length ? Math.ceil(Math.max.apply(null, areas)) : 10000,
+                priceMin: prices.length ? Math.floor(Math.min.apply(null, prices)) : 0,
+                priceMax: prices.length ? Math.ceil(Math.max.apply(null, prices)) : 10000
+            };
+        }
+
+        function updateRangeUI(prefix, unit) {
+            var minEl = document.getElementById(prefix + '-min'), maxEl = document.getElementById(prefix + '-max');
+            var fillEl = document.getElementById(prefix + '-fill');
+            var lo = parseFloat(minEl.min), hi = parseFloat(minEl.max);
+            var minVal = parseFloat(minEl.value), maxVal = parseFloat(maxEl.value);
+            var range = hi - lo;
+            var leftPct = range > 0 ? ((minVal - lo) / range) * 100 : 0;
+            var rightPct = range > 0 ? ((maxVal - lo) / range) * 100 : 100;
+            fillEl.style.left = leftPct + '%';
+            fillEl.style.width = Math.max(0, rightPct - leftPct) + '%';
+            document.getElementById(prefix + '-min-label').innerText = Math.round(minVal).toLocaleString() + unit;
+            document.getElementById(prefix + '-max-label').innerText = Math.round(maxVal).toLocaleString() + unit;
+
+            if (prefix === 'area') { advFilter.areaMin = minVal; advFilter.areaMax = maxVal; }
+            else { advFilter.priceMin = minVal; advFilter.priceMax = maxVal; }
+        }
+
+        function bindRangePair(prefix, unit) {
+            var minEl = document.getElementById(prefix + '-min'), maxEl = document.getElementById(prefix + '-max');
+            minEl.addEventListener('input', function() {
+                if (parseFloat(minEl.value) > parseFloat(maxEl.value)) { minEl.value = maxEl.value; }
+                updateRangeUI(prefix, unit); renderAssets(currentDataset);
+            });
+            maxEl.addEventListener('input', function() {
+                if (parseFloat(maxEl.value) < parseFloat(minEl.value)) { maxEl.value = minEl.value; }
+                updateRangeUI(prefix, unit); renderAssets(currentDataset);
+            });
+        }
+
+        function initAdvancedFilterUI() {
+            var b = computeFilterBounds();
+            var areaMinEl = document.getElementById('area-min'), areaMaxEl = document.getElementById('area-max');
+            var priceMinEl = document.getElementById('price-min'), priceMaxEl = document.getElementById('price-max');
+
+            areaMinEl.min = areaMaxEl.min = b.areaMin;
+            areaMinEl.max = areaMaxEl.max = b.areaMax;
+            areaMinEl.value = b.areaMin; areaMaxEl.value = b.areaMax;
+
+            priceMinEl.min = priceMaxEl.min = b.priceMin;
+            priceMinEl.max = priceMaxEl.max = b.priceMax;
+            priceMinEl.value = b.priceMin; priceMaxEl.value = b.priceMax;
+
+            document.getElementById('flt-type').value = 'ALL';
+            document.getElementById('flt-status').value = 'ALL';
+            advFilter.type = 'ALL'; advFilter.status = 'ALL';
+
+            updateRangeUI('area', '평');
+            updateRangeUI('price', '만원');
+        }
+
+        function resetAdvancedFilters() {
+            initAdvancedFilterUI();
+            renderAssets(currentDataset);
+        }
+
+        document.getElementById('flt-type').addEventListener('change', function(e) { advFilter.type = e.target.value; renderAssets(currentDataset); });
+        document.getElementById('flt-status').addEventListener('change', function(e) { advFilter.status = e.target.value; renderAssets(currentDataset); });
+        bindRangePair('area', '평');
+        bindRangePair('price', '만원');
+
         function renderAssets(dataset) {
             landLayer.clearLayers();
             bldgLayer.clearLayers();
 
-            var landTotal = 0, bldgTotal = 0;
-
             dataset.assets.forEach(function(item) {
+                if (!passesAdvancedFilter(item)) { return; }
+
                 var isLand = item.type === "LAND";
                 var pinClass, icon;
 
                 if (isLand) {
-                    landTotal++;
                     icon = "🌱";
                     pinClass = "pin-land";
                 } else {
-                    bldgTotal++;
                     icon = "🏢";
                     pinClass = "pin-bldg";
                 }
@@ -506,13 +1314,16 @@
                 marker.addTo(isLand ? landLayer : bldgLayer);
             });
 
-            document.getElementById('kpi-land-status').innerText = landTotal;
-            document.getElementById('kpi-bldg-status').innerText = bldgTotal;
+            // 상단 KPI는 필터와 무관하게 "전체 관리 데이터" 개수를 항상 표시
+            var landAllTotal = dataset.assets.filter(function(a) { return a.type === 'LAND'; }).length;
+            var bldgAllTotal = dataset.assets.filter(function(a) { return a.type === 'BUILDING'; }).length;
+            document.getElementById('kpi-land-status').innerText = landAllTotal;
+            document.getElementById('kpi-bldg-status').innerText = bldgAllTotal;
             document.getElementById('header-report-date').innerText = dataset.reportDate;
         }
 
         /* ==========================================================================
-           4-1. KPI 박스 클릭 시 자산 목록 표출 (토지: 공급일정 빠른 순 / 건물: 일련번호 순)
+           4-1. KPI 박스 클릭 시 자산 목록 표출 (정렬 기준 선택 가능)
            ========================================================================== */
         function parseScheduleSortKey(schedule) {
             if (!schedule) return Infinity;
@@ -521,24 +1332,81 @@
             return Infinity;
         }
 
+        var listSortState = { type: null, sort: null };
+
+        // 정렬 기준별 비교값 추출 (숫자는 오름/내림차순 뺄셈, 문자열은 localeCompare로 처리)
+        function getSortValue(item, key) {
+            if (key === 'schedule') return parseScheduleSortKey(item.schedule);
+            if (key === 'completion') return parseScheduleSortKey(item.completion);
+            if (key === 'price') { var p = getAssetPricePyManwon(item); return p === null ? Infinity : p; }
+            if (key === 'area') { var a = getAssetAreaPy(item); return a > 0 ? a : Infinity; }
+            if (key === 'code') return item.code || '';
+            return 0;
+        }
+
+        function applyListSort(list, sortVal) {
+            var parts = sortVal.split('_');
+            var key = parts[0], dir = parts[1];
+            list.sort(function(a, b) {
+                var va = getSortValue(a, key), vb = getSortValue(b, key);
+                if (typeof va === 'string') {
+                    return dir === 'asc' ? va.localeCompare(vb, undefined, { numeric: true }) : vb.localeCompare(va, undefined, { numeric: true });
+                }
+                return dir === 'asc' ? (va - vb) : (vb - va);
+            });
+        }
+
+        function onListSortChange(val, type) {
+            listSortState.sort = val;
+            renderAssetList(type);
+        }
+
         function renderAssetList(type) {
             var isLand = type === "LAND";
             var list = currentDataset.assets.filter(function(a) { return a.type === type; });
 
-            if (isLand) {
-                list.sort(function(a, b) { return parseScheduleSortKey(a.schedule) - parseScheduleSortKey(b.schedule); });
-            } else {
-                list.sort(function(a, b) { return (a.code || '').localeCompare(b.code || '', undefined, { numeric: true }); });
+            // 토지: 공급일정/평당가/면적 기준 정렬 제공 · 건물: 평당가/면적/준공년월/일련번호 기준 정렬 제공
+            var sortOptions = isLand ? [
+                { v: 'schedule_asc', l: '공급일정 빠른 순' },
+                { v: 'schedule_desc', l: '공급일정 늦은 순' },
+                { v: 'price_asc', l: '평당가 낮은 순' },
+                { v: 'price_desc', l: '평당가 높은 순' },
+                { v: 'area_asc', l: '면적 작은 순' },
+                { v: 'area_desc', l: '면적 큰 순' }
+            ] : [
+                { v: 'price_asc', l: '평당가 낮은 순' },
+                { v: 'price_desc', l: '평당가 높은 순' },
+                { v: 'area_asc', l: '연면적 작은 순' },
+                { v: 'area_desc', l: '연면적 큰 순' },
+                { v: 'completion_asc', l: '준공 오래된 순' },
+                { v: 'completion_desc', l: '준공 최신 순' },
+                { v: 'code_asc', l: '일련번호 순' }
+            ];
+
+            if (listSortState.type !== type) {
+                listSortState.type = type;
+                listSortState.sort = isLand ? 'schedule_asc' : 'code_asc';
             }
 
-            var html = '<div class="list-header">' + (isLand ? '🌱 공급 예정 토지' : '🏢 상업·업무용 건물') + ' 목록</div>' +
-                        '<div class="list-subheader">' + list.length + '건 · ' + (isLand ? '공급일정 빠른 순' : '일련번호 순') + '</div>';
+            applyListSort(list, listSortState.sort);
+
+            var optionsHtml = sortOptions.map(function(o) {
+                return '<option value="' + o.v + '"' + (o.v === listSortState.sort ? ' selected' : '') + '>' + o.l + '</option>';
+            }).join('');
+
+            var html = '<div class="list-header">' + (isLand ? '🌱 토지' : '🏢 건물') + ' 목록</div>' +
+                        '<div class="list-subheader-row">' +
+                            '<div class="list-subheader">' + list.length + '건</div>' +
+                            '<select class="list-sort-select" onchange="onListSortChange(this.value, \'' + type + '\')">' + optionsHtml + '</select>' +
+                        '</div>';
 
             if (list.length === 0) {
                 html += '<div class="empty-side" style="margin-top:60px;"><div class="icon">📭</div>데이터가 없습니다.</div>';
             } else {
                 list.forEach(function(item) {
+                    var cmp = isInCompare(item.code);
                     html += '<div class="asset-list-item" data-code="' + item.code + '">' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); renderAssetList(\'' + type + '\');">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
                         '<div class="row-name">' + item.name + '</div>' +
                         '<div class="row-meta">' +
                         (isLand
@@ -564,9 +1432,63 @@
         document.getElementById('kpi-box-land').addEventListener('click', function() { renderAssetList('LAND'); });
         document.getElementById('kpi-box-bldg').addEventListener('click', function() { renderAssetList('BUILDING'); });
 
+        /* ==========================================================================
+           4-2. 검색 기능 (지역명 / 자산명 키워드)
+           ========================================================================== */
+        /* ==========================================================================
+           4-3. 상단 필터 드롭다운 토글
+           ========================================================================== */
+        function toggleFilterPanel() {
+            document.getElementById('filter-panel').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            var panel = document.getElementById('filter-panel');
+            var dropdown = document.querySelector('.map-filter-dropdown');
+            if (panel.classList.contains('open') && !dropdown.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        function runSearch() {
+            var q = document.getElementById('search-input').value.trim();
+            if (!q) return;
+
+            var list = currentDataset.assets.filter(function(a) {
+                return (a.name && a.name.indexOf(q) !== -1) || (a.address && a.address.indexOf(q) !== -1);
+            });
+
+            var html = '<div class="list-header">🔎 "' + q + '" 검색 결과</div>' +
+                        '<div class="list-subheader">' + list.length + '건</div>';
+
+            if (list.length === 0) {
+                html += '<div class="empty-side" style="margin-top:60px;"><div class="icon">🔍</div>검색 결과가 없습니다.<br>지역명 또는 자산명으로 다시 검색해 보세요.</div>';
+            } else {
+                list.forEach(function(item) {
+                    var isLand = item.type === "LAND";
+                    var cmp = isInCompare(item.code);
+                    html += '<div class="asset-list-item">' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); runSearch();">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
+                        '<div class="row-name">' + (isLand ? '🌱' : '🏢') + ' ' + item.name + '</div>' +
+                        '<div class="row-meta">일련번호 ' + item.code + '<br>' + item.address + '</div></div>';
+                });
+            }
+
+            document.getElementById('sidebar-target').innerHTML = html;
+            var rows = document.querySelectorAll('.asset-list-item');
+            rows.forEach(function(row, i) {
+                row.addEventListener('click', function() {
+                    var item = list[i];
+                    map.flyTo(item.center, 14, { animate: true, duration: 0.7 });
+                    renderSidebarDetail(item);
+                });
+            });
+        }
+
+        document.getElementById('search-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { runSearch(); }
+        });
+
         // 필터 체크박스 연동 (자산 구분 / 지도 레이어 각각 독립 동작)
-        document.getElementById('chk-land').onchange = function(e) { e.target.checked ? map.addLayer(landLayer) : map.removeLayer(landLayer); };
-        document.getElementById('chk-bldg').onchange = function(e) { e.target.checked ? map.addLayer(bldgLayer) : map.removeLayer(bldgLayer); };
         document.getElementById('chk-transit').onchange = function(e) { e.target.checked ? map.addLayer(transitLayer) : map.removeLayer(transitLayer); };
 
         /* ==========================================================================
@@ -608,7 +1530,8 @@
                             pricePy: r['평당가'] || '-',
                             totalPrice: r['총금액'] || '-',
                             center: [parseFloat(r['위도']), parseFloat(r['경도'])],
-                            opinion: r['검토의견'] || '-'
+                            opinion: r['검토의견'] || '-',
+                            roadview: r['네이버로드뷰'] || ''
                         };
                     } else {
                         var gfaM2 = parseFloat(r['연면적_㎡'] || 0);
@@ -631,7 +1554,8 @@
                             pricePy: r['평당가'] || '-',
                             totalPrice: r['총금액'] || '-',
                             center: [parseFloat(r['위도']), parseFloat(r['경도'])],
-                            opinion: r['검토의견'] || '-'
+                            opinion: r['검토의견'] || '-',
+                            roadview: r['네이버로드뷰'] || ''
                         };
                     }
                 });
@@ -645,6 +1569,8 @@
                     return !(isFinite(a.center[0]) && isFinite(a.center[1]));
                 }).map(function(a) { return a.name + ' (' + a.address + ')'; });
 
+                renderAssets(currentDataset);
+                initAdvancedFilterUI(); // 새 데이터 기준으로 필터 슬라이더 범위 재설정
                 renderAssets(currentDataset);
                 if (currentDataset.assets.length > 0) { renderSidebarDetail(currentDataset.assets[0]); }
 
@@ -663,8 +1589,8 @@
 
         function downloadSampleExcel() {
             var sample = [
-                { "구분": "토지", "일련번호": "LND-2025-01", "자산명": "판교 제2테크노밸리 상업·업무 A1", "소재지": "경기도 성남시 분당구 삼평동 642", "공급예정일정": "2025년 05월 공급공고 (D-40)", "대지면적_㎡": 3850, "용도지역_지목": "일반상업지역 / 업무시설용지", "건폐율_용적률": "건폐율 60% / 용적률 400%", "평당가": "4,800만 원/평", "총금액": "약 559억 원", "위도": 37.4093, "경도": 127.1001, "검토의견": "신분당선 판교역 인근 및 월곶판교선 수혜.", "기준일": "2025-05-01" },
-                { "구분": "건물", "일련번호": "BLD-2025-03", "자산명": "인덕원 스테이션 타워", "소재지": "경기도 안양시 동안구 관양동 1488", "거래_검토유형": "통매각 / 밸류애드 검토", "연면적_㎡": 9800, "건축면적_㎡": 680, "대지면적_㎡": 950, "규모_층수": "지하 2층 / 지상 8층", "준공년월": "2014년 11월", "평당가": "1,950만 원/평 (연면적 기준)", "총금액": "578억 원", "위도": 37.4014, "경도": 126.9768, "검토의견": "4호선 및 월곶판교선 환승 예정 인덕원역 초인접." }
+                { "구분": "토지", "일련번호": "LND-2025-01", "자산명": "판교 제2테크노밸리 상업·업무 A1", "소재지": "경기도 성남시 분당구 삼평동 642", "공급예정일정": "2025년 05월 공급공고 (D-40)", "대지면적_㎡": 3850, "용도지역_지목": "일반상업지역 / 업무시설용지", "건폐율_용적률": "건폐율 60% / 용적률 400%", "평당가": "4,800만 원/평", "총금액": "약 559억 원", "위도": 37.4093, "경도": 127.1001, "검토의견": "신분당선 판교역 인근 및 월곶판교선 수혜.", "네이버로드뷰": "https://map.naver.com/p/...", "기준일": "2025-05-01" },
+                { "구분": "건물", "일련번호": "BLD-2025-03", "자산명": "인덕원 스테이션 타워", "소재지": "경기도 안양시 동안구 관양동 1488", "거래_검토유형": "통매각 / 밸류애드 검토", "연면적_㎡": 9800, "건축면적_㎡": 680, "대지면적_㎡": 950, "규모_층수": "지하 2층 / 지상 8층", "준공년월": "2014년 11월", "평당가": "1,950만 원/평 (연면적 기준)", "총금액": "578억 원", "위도": 37.4014, "경도": 126.9768, "검토의견": "4호선 및 월곶판교선 환승 예정 인덕원역 초인접.", "네이버로드뷰": "https://map.naver.com/p/..." }
             ];
             var ws = XLSX.utils.json_to_sheet(sample);
             var wb = XLSX.utils.book_new();
@@ -686,8 +1612,11 @@
 
         // 초기 실행 (기준일이 지정되지 않았다면 오늘 날짜를 기본값으로 사용)
         if (!currentDataset.reportDate) { currentDataset.reportDate = todayReportDate(); }
+        initAdvancedFilterUI();
         renderAssets(currentDataset);
-        renderSidebarDetail(currentDataset.assets[0]);
+        // 최초 접속 시에는 특정 자산이 아니라 안내 메시지를 표시
+        document.getElementById('sidebar-target').innerHTML =
+            '<div class="empty-side"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
 
         setTimeout(function() { map.invalidateSize(); }, 150);
         window.addEventListener('resize', function() { map.invalidateSize(); });
