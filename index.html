@@ -235,7 +235,9 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.25); white-space: nowrap; cursor: pointer;
             transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
             transform-origin: center center;
+            max-width: 150px; overflow: hidden;
         }
+        .pin-label { display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
         .pin-land { background: #e8890c; }             /* 토지 - 웜 앰버 */
         .pin-bldg { background: var(--brand); }          /* 건물 - 브랜드 블루 */
         .pin-home {
@@ -1302,9 +1304,11 @@
                 var marker = L.marker(item.center, {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div class="pin ' + pinClass + '">' + icon + ' ' + item.name.substring(0, 9) + '</div>'
+                        html: '<div class="pin ' + pinClass + '"><span class="pin-label">' + icon + ' ' + item.name + '</span></div>'
                     })
                 });
+
+                marker.bindTooltip(item.name, { direction: 'top', offset: [0, -8], className: 'station-tooltip' });
 
                 marker.on('click', function() {
                     map.flyTo(item.center, 14, { animate: true, duration: 0.7 });
@@ -1580,7 +1584,13 @@
                 }
                 alert(msg);
               } catch (err) {
-                alert('엑셀 처리 중 오류가 발생했습니다: ' + err.message + '\n엑셀 양식(컬럼명)이 다운로드 받은 템플릿과 일치하는지 확인해 주세요.');
+                var hint = '엑셀 양식(컬럼명)이 다운로드 받은 템플릿과 일치하는지 확인해 주세요.';
+                if (/encrypt/i.test(err.message) || /EncryptionInfo/i.test(err.message)) {
+                    hint = '이 파일이 암호로 보호되어 있거나("파일 > 정보 > 통합 문서 보호"에서 암호 해제 필요), ' +
+                           'Excel이 아닌 다른 프로그램(WPS/한컴/Numbers 등)에서 저장되어 구조가 달라졌을 수 있습니다.\n' +
+                           '가능하면 정품 Excel 또는 Google 스프레드시트에서 열어 "Excel 통합 문서(.xlsx)"로 다시 저장한 뒤 업로드해 주세요.';
+                }
+                alert('엑셀 처리 중 오류가 발생했습니다: ' + err.message + '\n\n' + hint);
                 console.error(err);
               }
             };
