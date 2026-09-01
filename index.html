@@ -33,7 +33,8 @@
             background: #ffffff; border-bottom: 1px solid var(--line);
             box-shadow: 0 2px 8px rgba(0,0,0,0.04); z-index: 1000; position: relative;
         }
-        .topbar-brand { display: flex; align-items: center; gap: 14px; min-width: 0; flex-shrink: 0; }
+        .topbar-brand { display: flex; align-items: center; gap: 14px; min-width: 0; flex-shrink: 0; cursor: pointer; padding: 6px; margin: -6px; border-radius: 10px; transition: background .15s; }
+        .topbar-brand:hover { background: #f5f5f5; }
         .brand-logo { height: 26px; width: auto; flex-shrink: 0; }
         .brand-text { min-width: 0; }
         .brand-title {
@@ -160,7 +161,7 @@
             border-left: 1px solid var(--line); display: flex; flex-direction: column;
             z-index: 500; box-shadow: -6px 0 24px rgba(0,0,0,0.05);
         }
-        .sidebar-content { padding: 28px 26px; flex: 1; overflow-y: auto; }
+        .sidebar-content { padding: 28px 26px; flex: 1; overflow-y: auto; position: relative; }
 
         /* 상세 UI (Airbnb 리스팅 스타일 참고) */
         .badge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -227,6 +228,14 @@
 
         .empty-side { text-align:center; color:#a3a3a3; margin-top:140px; }
         .empty-side .icon { font-size:40px; margin-bottom:12px; }
+
+        .sidebar-welcome {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: calc(100% - 8px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: #a3a3a3;
+        }
+        .sidebar-welcome .icon { font-size: 40px; margin-bottom: 14px; }
 
         /* 지도 마커 핀 */
         .pin {
@@ -315,7 +324,7 @@
     <div id="app-shell">
         <!-- 상단 고정 내비게이션 바 -->
         <header id="topbar">
-            <div class="topbar-brand">
+            <div class="topbar-brand" onclick="location.reload()" title="홈으로 이동" role="button">
                 <img class="brand-logo" alt="Pearl Abyss" src="data:image/png;base64,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">
                 <div class="brand-text">
                     <div class="brand-title">부동산 리포트</div>
@@ -385,14 +394,6 @@
                             <div class="range-labels"><span id="price-min-label">0만원</span><span id="price-max-label">0만원</span></div>
                         </div>
                         <div class="filter-group">
-                            <div class="filter-group-title">거래 가능 상태</div>
-                            <select id="flt-status" class="filter-select">
-                                <option value="ALL">전체</option>
-                                <option value="공급예정">공급 예정</option>
-                                <option value="매각중">매각 중</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
                             <div class="filter-group-title">지도 레이어</div>
                             <label class="toggle-item"><input type="checkbox" id="chk-transit" checked>철도망</label>
                         </div>
@@ -410,7 +411,7 @@
             <!-- 우측 상세 정보 사이드바 -->
             <div id="sidebar">
                 <div class="sidebar-content" id="sidebar-target">
-                    <div class="empty-side">
+                    <div class="sidebar-welcome">
                         <div class="icon">📌</div>
                         지도 위의 자산 마커를 클릭하시면<br>상세 정보가 표출됩니다.
                     </div>
@@ -430,10 +431,11 @@
                     name: "판교 제2테크노밸리 상업·업무 A1",
                     address: "경기도 성남시 분당구 삼평동 642",
                     schedule: "2025년 05월 공급공고 (D-40)",
+                    scheduleYm: 202505,
                     areaM2: 3850,
                     areaPy: "1,164.6",
                     zoning: "일반상업지역 / 업무시설용지",
-                    bcrFar: "건폐율 60% / 용적률 400%",
+                    bcrFar: "건폐율 60% / 용적률 400% / 최고 15층",
                     pricePy: "4,800만 원/평",
                     totalPrice: "약 559억 원",
                     center: [37.4093, 127.1001],
@@ -446,10 +448,11 @@
                     name: "수서역세권 공공주택지구 복합업무 B-2",
                     address: "서울특별시 강남구 수서동 728",
                     schedule: "2026년 03월 공급 예정",
+                    scheduleYm: 202603,
                     areaM2: 5420,
                     areaPy: "1,639.6",
                     zoning: "중심상업지역 / 복합환승·업무",
-                    bcrFar: "건폐율 70% / 용적률 800%",
+                    bcrFar: "건폐율 70% / 용적률 800% / 최고 40층",
                     pricePy: "최고가 경쟁입찰",
                     totalPrice: "예정가 1,178억 원 추산",
                     center: [37.4872, 127.1025],
@@ -702,6 +705,13 @@
         }
 
         // "4,800만 원/평" 등의 텍스트에서 평당가(원) 추출
+        // "37.4093, 127.1001" 형식의 단일 필드를 [위도, 경도] 배열로 변환
+        function parseLatLng(text) {
+            if (!text) return [NaN, NaN];
+            var parts = String(text).split(',').map(function(s) { return parseFloat(s.trim()); });
+            return [parts[0], parts[1]];
+        }
+
         function parsePricePyToWon(text) {
             if (!text) return null;
             var m = text.match(/([\d,]+(?:\.\d+)?)\s*(억|만)?\s*원/);
@@ -1066,7 +1076,7 @@
 
         var HOME_LOCATION = { name: "펄어비스 홈 원", center: [37.4064817, 126.9833096] };
 
-        var map = L.map('map').setView(HOME_LOCATION.center, 15);
+        var map = L.map('map').setView(HOME_LOCATION.center, 14);
 
         // 줌 레벨에 따라 마커 크기를 함께 축소/확대 (축소 시 마커 중첩 완화)
         function updateMarkerScale() {
@@ -1145,7 +1155,7 @@
                         '<div class="detail-item"><div class="detail-label">공급 예정일정</div><div class="detail-val">' + (item.schedule || '-') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.areaM2) + ' ㎡ (' + (item.areaPy || '-') + '평)</div></div>' +
                         '<div class="detail-item"><div class="detail-label">용도지역/지목</div><div class="detail-val">' + (item.zoning || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">건폐율/용적률</div><div class="detail-val">' + (item.bcrFar || '-') + '</div></div>' +
+                        '<div class="detail-item"><div class="detail-label">건폐율/용적률/층수</div><div class="detail-val">' + (item.bcrFar || '-') + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
                         '<div class="detail-item"><div class="detail-label">네이버 로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener" style="color:#004986; text-decoration:underline;">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
                     '</div>' +
@@ -1195,20 +1205,17 @@
         /* ==========================================================================
            4-0. 상세 필터 (부동산 유형 / 면적 / 평당가 / 거래가능상태)
            ========================================================================== */
-        var advFilter = { type: 'ALL', areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999, status: 'ALL' };
+        var advFilter = { type: 'ALL', areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999 };
 
         function getAssetArea(a) { return a.type === 'LAND' ? (a.areaM2 || 0) : (a.gfaM2 || 0); }
         function getAssetAreaPy(a) { return getAssetArea(a) / 3.3058; }
         function getAssetPricePyManwon(a) { var w = parsePricePyToWon(a.pricePy); return w ? Math.round(w / 10000) : null; }
-        function getAssetStatus(a) { return a.type === 'LAND' ? '공급예정' : '매각중'; }
-
         function passesAdvancedFilter(item) {
             if (advFilter.type !== 'ALL' && item.type !== advFilter.type) return false;
             var area = getAssetAreaPy(item);
             if (area > 0 && (area < advFilter.areaMin || area > advFilter.areaMax)) return false;
             var price = getAssetPricePyManwon(item);
             if (price !== null && (price < advFilter.priceMin || price > advFilter.priceMax)) return false;
-            if (advFilter.status !== 'ALL' && getAssetStatus(item) !== advFilter.status) return false;
             return true;
         }
 
@@ -1266,8 +1273,7 @@
             priceMinEl.value = b.priceMin; priceMaxEl.value = b.priceMax;
 
             document.getElementById('flt-type').value = 'ALL';
-            document.getElementById('flt-status').value = 'ALL';
-            advFilter.type = 'ALL'; advFilter.status = 'ALL';
+            advFilter.type = 'ALL';
 
             updateRangeUI('area', '평');
             updateRangeUI('price', '만원');
@@ -1279,7 +1285,6 @@
         }
 
         document.getElementById('flt-type').addEventListener('change', function(e) { advFilter.type = e.target.value; renderAssets(currentDataset); });
-        document.getElementById('flt-status').addEventListener('change', function(e) { advFilter.status = e.target.value; renderAssets(currentDataset); });
         bindRangePair('area', '평');
         bindRangePair('price', '만원');
 
@@ -1329,18 +1334,28 @@
         /* ==========================================================================
            4-1. KPI 박스 클릭 시 자산 목록 표출 (정렬 기준 선택 가능)
            ========================================================================== */
-        function parseScheduleSortKey(schedule) {
-            if (!schedule) return Infinity;
-            var m = schedule.match(/(\d{4})\s*년\s*(\d{1,2})\s*월/);
+        // "2025년 05월", "2025-05", "2025.05", "2025/05", "202505" 등 다양한 표기를 폭넓게 인식
+        function parseYmFlexible(val) {
+            if (val === null || val === undefined || val === '') return null;
+            var s = String(val).trim();
+            var m = s.match(/(\d{4})\s*[-.\/년]?\s*(\d{1,2})/);
             if (m) { return parseInt(m[1], 10) * 100 + parseInt(m[2], 10); }
-            return Infinity;
+            return null;
+        }
+
+        function parseScheduleSortKey(schedule) {
+            var ym = parseYmFlexible(schedule);
+            return ym !== null ? ym : Infinity;
         }
 
         var listSortState = { type: null, sort: null };
 
         // 정렬 기준별 비교값 추출 (숫자는 오름/내림차순 뺄셈, 문자열은 localeCompare로 처리)
         function getSortValue(item, key) {
-            if (key === 'schedule') return parseScheduleSortKey(item.schedule);
+            if (key === 'schedule') {
+                // 엑셀의 '공급연월(정렬용)' 값이 있으면 그걸 우선 사용, 없으면 자유 텍스트에서 최대한 추출
+                return (item.scheduleYm !== null && item.scheduleYm !== undefined) ? item.scheduleYm : parseScheduleSortKey(item.schedule);
+            }
             if (key === 'completion') return parseScheduleSortKey(item.completion);
             if (key === 'price') { var p = getAssetPricePyManwon(item); return p === null ? Infinity : p; }
             if (key === 'area') { var a = getAssetAreaPy(item); return a > 0 ? a : Infinity; }
@@ -1527,13 +1542,14 @@
                             name: r['자산명'] || '미명명 토지',
                             address: r['소재지'] || '-',
                             schedule: r['공급예정일정'] || '-',
+                            scheduleYm: parseYmFlexible(r['공급연월(정렬용)']),
                             areaM2: areaM2,
                             areaPy: (areaM2 / 3.3058).toFixed(1),
                             zoning: r['용도지역_지목'] || '-',
-                            bcrFar: r['건폐율_용적률'] || '-',
+                            bcrFar: r['건폐율_용적률_층수'] || '-',
                             pricePy: r['평당가'] || '-',
                             totalPrice: r['총금액'] || '-',
-                            center: [parseFloat(r['위도']), parseFloat(r['경도'])],
+                            center: parseLatLng(r['위도,경도']),
                             opinion: r['검토의견'] || '-',
                             roadview: r['네이버로드뷰'] || ''
                         };
@@ -1557,7 +1573,7 @@
                             completion: r['준공년월'] || '-',
                             pricePy: r['평당가'] || '-',
                             totalPrice: r['총금액'] || '-',
-                            center: [parseFloat(r['위도']), parseFloat(r['경도'])],
+                            center: parseLatLng(r['위도,경도']),
                             opinion: r['검토의견'] || '-',
                             roadview: r['네이버로드뷰'] || ''
                         };
@@ -1568,7 +1584,7 @@
                 var uploadedRefDate = topRowRefDate ? ((topRowRefDate instanceof Date) ? topRowRefDate.toISOString().slice(0, 10) : String(topRowRefDate)) : null;
                 currentDataset.reportDate = uploadedRefDate ? (uploadedRefDate + " 기준") : todayReportDate();
 
-                // 위도/경도는 엑셀에 입력된 값을 그대로 사용합니다 (자동 좌표 변환 없음)
+                // 위도,경도는 엑셀에 입력된 값을 그대로 사용합니다 (자동 좌표 변환 없음)
                 var invalidRows = currentDataset.assets.filter(function(a) {
                     return !(isFinite(a.center[0]) && isFinite(a.center[1]));
                 }).map(function(a) { return a.name + ' (' + a.address + ')'; });
@@ -1580,7 +1596,7 @@
 
                 var msg = '엑셀 데이터 ' + rows.length + '건을 지도에 반영했습니다.';
                 if (invalidRows.length > 0) {
-                    msg += '\n\n다음 ' + invalidRows.length + '건은 위도/경도 값이 비어있거나 올바르지 않아 지도에 표시되지 않습니다:\n- ' + invalidRows.join('\n- ') + '\n\n카카오맵/구글맵에서 해당 위치를 우클릭하면 좌표를 복사할 수 있습니다.';
+                    msg += '\n\n다음 ' + invalidRows.length + '건은 "위도,경도" 값이 비어있거나 형식이 올바르지 않아 지도에 표시되지 않습니다:\n- ' + invalidRows.join('\n- ') + '\n\n카카오맵/구글맵에서 해당 위치를 우클릭해 나온 좌표를 "위도, 경도" 형식으로 한 칸에 입력해 주세요.';
                 }
                 alert(msg);
               } catch (err) {
@@ -1599,8 +1615,8 @@
 
         function downloadSampleExcel() {
             var sample = [
-                { "구분": "토지", "일련번호": "LND-2025-01", "자산명": "판교 제2테크노밸리 상업·업무 A1", "소재지": "경기도 성남시 분당구 삼평동 642", "공급예정일정": "2025년 05월 공급공고 (D-40)", "대지면적_㎡": 3850, "용도지역_지목": "일반상업지역 / 업무시설용지", "건폐율_용적률": "건폐율 60% / 용적률 400%", "평당가": "4,800만 원/평", "총금액": "약 559억 원", "위도": 37.4093, "경도": 127.1001, "검토의견": "신분당선 판교역 인근 및 월곶판교선 수혜.", "네이버로드뷰": "https://map.naver.com/p/...", "기준일": "2025-05-01" },
-                { "구분": "건물", "일련번호": "BLD-2025-03", "자산명": "인덕원 스테이션 타워", "소재지": "경기도 안양시 동안구 관양동 1488", "거래_검토유형": "통매각 / 밸류애드 검토", "연면적_㎡": 9800, "건축면적_㎡": 680, "대지면적_㎡": 950, "규모_층수": "지하 2층 / 지상 8층", "준공년월": "2014년 11월", "평당가": "1,950만 원/평 (연면적 기준)", "총금액": "578억 원", "위도": 37.4014, "경도": 126.9768, "검토의견": "4호선 및 월곶판교선 환승 예정 인덕원역 초인접.", "네이버로드뷰": "https://map.naver.com/p/..." }
+                { "구분": "토지", "일련번호": "LND-2025-01", "자산명": "판교 제2테크노밸리 상업·업무 A1", "소재지": "경기도 성남시 분당구 삼평동 642", "공급예정일정": "2025년 05월 공급공고 (D-40)", "공급연월(정렬용)": "2025-05", "대지면적_㎡": 3850, "용도지역_지목": "일반상업지역 / 업무시설용지", "건폐율_용적률_층수": "건폐율 60% / 용적률 400%", "평당가": "4,800만 원/평", "총금액": "약 559억 원", "위도,경도": "37.4093, 127.1001", "검토의견": "신분당선 판교역 인근 및 월곶판교선 수혜.", "네이버로드뷰": "https://map.naver.com/p/...", "기준일": "2025-05-01" },
+                { "구분": "건물", "일련번호": "BLD-2025-03", "자산명": "인덕원 스테이션 타워", "소재지": "경기도 안양시 동안구 관양동 1488", "거래_검토유형": "통매각 / 밸류애드 검토", "연면적_㎡": 9800, "건축면적_㎡": 680, "대지면적_㎡": 950, "규모_층수": "지하 2층 / 지상 8층", "준공년월": "2014년 11월", "평당가": "1,950만 원/평 (연면적 기준)", "총금액": "578억 원", "위도,경도": "37.4014, 126.9768", "검토의견": "4호선 및 월곶판교선 환승 예정 인덕원역 초인접.", "네이버로드뷰": "https://map.naver.com/p/..." }
             ];
             var ws = XLSX.utils.json_to_sheet(sample);
             var wb = XLSX.utils.book_new();
@@ -1626,7 +1642,7 @@
         renderAssets(currentDataset);
         // 최초 접속 시에는 특정 자산이 아니라 안내 메시지를 표시
         document.getElementById('sidebar-target').innerHTML =
-            '<div class="empty-side"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
+            '<div class="sidebar-welcome"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
 
         setTimeout(function() { map.invalidateSize(); }, 150);
         window.addEventListener('resize', function() { map.invalidateSize(); });
