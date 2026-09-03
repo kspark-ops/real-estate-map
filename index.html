@@ -285,6 +285,22 @@
         .row-compare-btn:hover { background: var(--brand-tint); }
         .row-compare-btn.active:hover { background: var(--brand-dark); }
 
+        .home-compare-toggles { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+        .home-toggle-btn {
+            border: 1px solid var(--brand); background: #ffffff; color: var(--brand);
+            border-radius: 999px; padding: 5px 10px; font-size: 10.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .home-toggle-btn:hover { background: var(--brand-tint); }
+        .home-toggle-btn.active { background: var(--brand); color: #fff; }
+        .home-toggle-btn.active:hover { background: var(--brand-dark); }
+
+        .sidebar-back-btn {
+            display: none; align-items: center; gap: 5px; flex-shrink: 0;
+            padding: 16px 26px 0; border: none; background: transparent;
+            color: var(--brand); font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: left;
+        }
+        .sidebar-back-btn:hover { text-decoration: underline; }
+
         .station-tooltip { background: var(--ink) !important; color: #fff !important; border: none !important; font-size: 10.5px !important; font-weight: 700 !important; padding: 3px 8px !important; border-radius: 6px !important; }
 
         /* ==========================================================================
@@ -410,6 +426,7 @@
 
             <!-- 우측 상세 정보 사이드바 -->
             <div id="sidebar">
+                <button id="sidebar-back-btn" class="sidebar-back-btn" onclick="goBack()">← 뒤로</button>
                 <div class="sidebar-content" id="sidebar-target">
                     <div class="sidebar-welcome">
                         <div class="icon">📌</div>
@@ -487,6 +504,42 @@
         var currentDetailItem = null;
         var compareList = [];
 
+        // ============================== 사이드바 뒤로가기 네비게이션 ==============================
+        var navStack = [];
+        var currentView = null;
+
+        function pushHistory(descriptor) {
+            if (currentView) { navStack.push(currentView); }
+            currentView = descriptor;
+            updateBackButton();
+        }
+
+        function updateBackButton() {
+            var btn = document.getElementById('sidebar-back-btn');
+            if (!btn) return;
+            btn.style.display = navStack.length > 0 ? 'flex' : 'none';
+        }
+
+        function goBack() {
+            if (navStack.length === 0) return;
+            var prev = navStack.pop();
+            currentView = null; // 재-push 방지 (renderX가 다시 pushHistory 하도록 아래에서 skipHistory=true 사용)
+            if (prev.type === 'detail') { renderSidebarDetail(prev.item, true); }
+            else if (prev.type === 'list') { renderAssetList(prev.assetType, true); }
+            else if (prev.type === 'search') { runSearch(prev.query, true); }
+            else if (prev.type === 'compare') { renderCompareTable(true); }
+            else if (prev.type === 'welcome') { showWelcome(true); }
+            currentView = prev;
+            updateBackButton();
+        }
+
+        function showWelcome(skipHistory) {
+            if (!skipHistory) { pushHistory({ type: 'welcome' }); } else { currentView = { type: 'welcome' }; }
+            document.getElementById('sidebar-target').innerHTML =
+                '<div class="sidebar-welcome"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
+            updateBackButton();
+        }
+
         function isInCompare(code) { return compareList.indexOf(code) !== -1; }
 
         function toggleCompare(code) {
@@ -514,14 +567,17 @@
             }
         }
 
-        function renderCompareTable() {
+        function renderCompareTable(skipHistory) {
+            if (!skipHistory) { pushHistory({ type: 'compare' }); } else { currentView = { type: 'compare' }; }
+
             var items = compareList.map(function(code) {
-                return currentDataset.assets.filter(function(a) { return a.code === code; })[0];
+                return findAssetByCode(code);
             }).filter(Boolean);
 
             if (items.length === 0) {
                 document.getElementById('sidebar-target').innerHTML =
                     '<div class="empty-side"><div class="icon">⚖️</div>비교함에 담긴 자산이 없습니다.<br>목록 또는 상세정보에서 "비교함에 추가"를 눌러주세요.</div>';
+                updateBackButton();
                 return;
             }
 
@@ -546,13 +602,19 @@
             ];
 
             var html = '<div class="list-header">⚖️ 자산 비교 (' + items.length + '건)</div>' +
-                        '<div class="list-subheader">최대 3건까지 나란히 비교할 수 있습니다.</div>' +
+                        '<div class="list-subheader-row">' +
+                            '<div class="list-subheader">최대 3건까지 나란히 비교할 수 있습니다.</div>' +
+                            '<div class="home-compare-toggles">' +
+                                '<button class="home-toggle-btn' + (isInCompare('HOME-BLDG') ? ' active' : '') + '" onclick="toggleCompare(\'HOME-BLDG\'); renderCompareTable(true); updateCompareBadge();">' + (isInCompare('HOME-BLDG') ? '✓ 홈 원 건물' : '🏢 홈 원 건물') + '</button>' +
+                                '<button class="home-toggle-btn' + (isInCompare('HOME-LAND') ? ' active' : '') + '" onclick="toggleCompare(\'HOME-LAND\'); renderCompareTable(true); updateCompareBadge();">' + (isInCompare('HOME-LAND') ? '✓ 홈 원 토지' : '🌳 홈 원 토지') + '</button>' +
+                            '</div>' +
+                        '</div>' +
                         '<div class="compare-table" style="grid-template-columns: 68px repeat(' + items.length + ', 1fr);">' +
                         '<div class="ct-cell ct-label"></div>';
 
             items.forEach(function(a) {
                 html += '<div class="ct-cell ct-head">' +
-                            '<button class="ct-remove" onclick="toggleCompare(\'' + a.code + '\'); renderCompareTable(); updateCompareBadge();">✕</button>' +
+                            '<button class="ct-remove" onclick="toggleCompare(\'' + a.code + '\'); renderCompareTable(true); updateCompareBadge();">✕</button>' +
                             '<div class="ct-head-name">' + a.name + '</div>' +
                         '</div>';
             });
@@ -565,9 +627,17 @@
             html += '</div>' +
                     '<div style="font-size:10.5px; color:#a3a3a3; margin-top:10px;">※ "인근시세 대비"는 국토교통부 실거래가 오픈API(최근 12개월, 동일 법정동 우선) 기준 참고용 산출값이며, 실제 감정평가를 대체하지 않습니다.</div>';
             document.getElementById('sidebar-target').innerHTML = html;
+            updateBackButton();
 
-            // 비교표 렌더링 후, 각 자산의 인근시세 대비 평가를 비동기로 채워 넣음
-            items.forEach(function(a) { fetchCompareVerdict(a); });
+            // 비교표 렌더링 후, 각 자산의 인근시세 대비 평가를 비동기로 채워 넣음 (홈 원 데이터는 참고용이라 조회 생략)
+            items.forEach(function(a) {
+                if (a.code === 'HOME-BLDG' || a.code === 'HOME-LAND') {
+                    var cell = document.getElementById('verdict-cell-' + a.code);
+                    if (cell) { cell.innerHTML = '<span style="color:#a3a3a3;">-</span>'; }
+                } else {
+                    fetchCompareVerdict(a);
+                }
+            });
         }
 
         // 비교표의 "인근시세 대비" 셀 하나를 채우는 경량 조회 (표시용 요약치만 계산, 상세 목록/그래프는 만들지 않음)
@@ -1076,6 +1146,31 @@
 
         var HOME_LOCATION = { name: "펄어비스 홈 원", center: [37.4064817, 126.9833096] };
 
+        // "자산 비교" 탭에서 선택적으로 추가할 수 있는 펄어비스 홈 원(사옥) 참고 데이터
+        var HOME_LAND_ASSET = {
+            type: "LAND", code: "HOME-LAND", name: "펄어비스 홈 원 (토지)",
+            address: "경기도 과천시 858-1", schedule: "-", scheduleYm: null,
+            areaM2: 7014, areaPy: (7014 / 3.3058).toFixed(1),
+            zoning: "-", bcrFar: "-", pricePy: "", totalPrice: "",
+            center: HOME_LOCATION.center, opinion: "펄어비스 사옥 부지 (비교 참고용 데이터)", roadview: ""
+        };
+        var HOME_BUILDING_ASSET = {
+            type: "BUILDING", code: "HOME-BLDG", name: "펄어비스 홈 원 (건물)",
+            address: "경기도 과천시 858-1", dealType: "-",
+            gfaM2: 63113, gfaPy: (63113 / 3.3058).toFixed(1),
+            bareaM2: 0, bareaPy: "-",
+            lareaM2: 7014, lareaPy: (7014 / 3.3058).toFixed(1),
+            floors: "-", completion: "2022년 06월 15일", pricePy: "", totalPrice: "",
+            center: HOME_LOCATION.center, opinion: "펄어비스 사옥 (비교 참고용 데이터)", roadview: ""
+        };
+        var HOME_ASSETS = [HOME_LAND_ASSET, HOME_BUILDING_ASSET];
+
+        function findAssetByCode(code) {
+            var found = currentDataset.assets.filter(function(a) { return a.code === code; })[0];
+            if (found) return found;
+            return HOME_ASSETS.filter(function(a) { return a.code === code; })[0];
+        }
+
         var map = L.map('map').setView(HOME_LOCATION.center, 14);
 
         // 줌 레벨에 따라 마커 크기를 함께 축소/확대 (축소 시 마커 중첩 완화)
@@ -1133,7 +1228,8 @@
         /* ==========================================================================
            3. 상세 사이드바 렌더러 (참고 이미지와 동일 양식)
            ========================================================================== */
-        function renderSidebarDetail(item) {
+        function renderSidebarDetail(item, skipHistory) {
+            if (!skipHistory) { pushHistory({ type: 'detail', item: item }); } else { currentView = { type: 'detail', item: item }; }
             var isLand = item.type === "LAND";
             var html = "";
             currentDetailItem = item;
@@ -1189,12 +1285,13 @@
                     '<div id="compare-result" style="display:none;"></div>';
 
             document.getElementById('sidebar-target').innerHTML = html;
+            updateBackButton();
         }
 
         // 상단 배지 옆에 붙는 작은 "비교함" 토글 버튼
         function compareBtnHtml(item) {
             var inCompare = isInCompare(item.code);
-            return '<button class="compare-add-small' + (inCompare ? ' active' : '') + '" onclick="toggleCompare(\'' + item.code + '\'); renderSidebarDetail(currentDetailItem);">' +
+            return '<button class="compare-add-small' + (inCompare ? ' active' : '') + '" onclick="toggleCompare(\'' + item.code + '\'); renderSidebarDetail(currentDetailItem, true);">' +
                     (inCompare ? '✓ 비교함' : '비교함+') +
                    '</button>';
         }
@@ -1377,10 +1474,11 @@
 
         function onListSortChange(val, type) {
             listSortState.sort = val;
-            renderAssetList(type);
+            renderAssetList(type, true);
         }
 
-        function renderAssetList(type) {
+        function renderAssetList(type, skipHistory) {
+            if (!skipHistory) { pushHistory({ type: 'list', assetType: type }); } else { currentView = { type: 'list', assetType: type }; }
             var isLand = type === "LAND";
             var list = currentDataset.assets.filter(function(a) { return a.type === type; });
 
@@ -1425,7 +1523,7 @@
                 list.forEach(function(item) {
                     var cmp = isInCompare(item.code);
                     html += '<div class="asset-list-item" data-code="' + item.code + '">' +
-                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); renderAssetList(\'' + type + '\');">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); renderAssetList(\'' + type + '\', true);">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
                         '<div class="row-name">' + item.name + '</div>' +
                         '<div class="row-meta">' +
                         (isLand
@@ -1437,6 +1535,7 @@
             }
 
             document.getElementById('sidebar-target').innerHTML = html;
+            updateBackButton();
 
             var rows = document.querySelectorAll('.asset-list-item');
             rows.forEach(function(row, i) {
@@ -1468,9 +1567,12 @@
             }
         });
 
-        function runSearch() {
-            var q = document.getElementById('search-input').value.trim();
+        function runSearch(presetQuery, skipHistory) {
+            var q = (presetQuery !== undefined && presetQuery !== null) ? presetQuery : document.getElementById('search-input').value.trim();
             if (!q) return;
+            document.getElementById('search-input').value = q;
+
+            if (!skipHistory) { pushHistory({ type: 'search', query: q }); } else { currentView = { type: 'search', query: q }; }
 
             var list = currentDataset.assets.filter(function(a) {
                 return (a.name && a.name.indexOf(q) !== -1) || (a.address && a.address.indexOf(q) !== -1);
@@ -1486,13 +1588,14 @@
                     var isLand = item.type === "LAND";
                     var cmp = isInCompare(item.code);
                     html += '<div class="asset-list-item">' +
-                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); runSearch();">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); runSearch(undefined, true);">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
                         '<div class="row-name">' + (isLand ? '🌱' : '🏢') + ' ' + item.name + '</div>' +
                         '<div class="row-meta">일련번호 ' + item.code + '<br>' + item.address + '</div></div>';
                 });
             }
 
             document.getElementById('sidebar-target').innerHTML = html;
+            updateBackButton();
             var rows = document.querySelectorAll('.asset-list-item');
             rows.forEach(function(row, i) {
                 row.addEventListener('click', function() {
@@ -1641,8 +1744,7 @@
         initAdvancedFilterUI();
         renderAssets(currentDataset);
         // 최초 접속 시에는 특정 자산이 아니라 안내 메시지를 표시
-        document.getElementById('sidebar-target').innerHTML =
-            '<div class="sidebar-welcome"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
+        showWelcome();
 
         setTimeout(function() { map.invalidateSize(); }, 150);
         window.addEventListener('resize', function() { map.invalidateSize(); });
