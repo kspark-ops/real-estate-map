@@ -73,11 +73,11 @@
         .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .map-filter-dropdown { position: absolute; bottom: 16px; left: 16px; z-index: 1000; }
         .map-filter-btn {
-            background: #ffffff; border: 1px solid var(--line); padding: 10px 16px;
-            border-radius: 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--ink);
-            box-shadow: var(--card-shadow);
+            background: var(--brand); border: none; padding: 14px 24px;
+            border-radius: 999px; font-size: 15px; font-weight: 800; cursor: pointer; color: #ffffff;
+            box-shadow: 0 6px 18px rgba(0,73,134,0.40); letter-spacing: -0.2px;
         }
-        .map-filter-btn:hover { background: var(--brand-tint); color: var(--brand); border-color: var(--brand); }
+        .map-filter-btn:hover { background: var(--brand-dark); }
 
         .compare-float-btn {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 1000;
@@ -111,7 +111,8 @@
         .filter-panel {
             display: none; position: absolute; bottom: calc(100% + 10px); left: 0; z-index: 1000;
             background: #ffffff; border: 1px solid var(--line); border-radius: 14px;
-            box-shadow: var(--card-shadow-lg); padding: 16px; width: 220px;
+            box-shadow: var(--card-shadow-lg); padding: 16px; width: 260px;
+            max-height: calc(100vh - 220px); overflow-y: auto;
         }
         .filter-panel.open { display: block; }
         .filter-group { margin-bottom: 14px; }
@@ -319,6 +320,24 @@
                 <div class="map-filter-dropdown">
                     <div class="filter-panel" id="filter-panel">
                         <div class="filter-group">
+                            <div class="filter-group-title">호가 (억원)</div>
+                            <div class="range-slider">
+                                <div class="range-track"><div class="range-fill" id="ask-fill"></div></div>
+                                <input type="range" id="ask-min" class="range-input">
+                                <input type="range" id="ask-max" class="range-input">
+                            </div>
+                            <div class="range-labels"><span id="ask-min-label">0억원</span><span id="ask-max-label">0억원</span></div>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">건물 연식 (건축년도)</div>
+                            <div class="range-slider">
+                                <div class="range-track"><div class="range-fill" id="year-fill"></div></div>
+                                <input type="range" id="year-min" class="range-input">
+                                <input type="range" id="year-max" class="range-input">
+                            </div>
+                            <div class="range-labels"><span id="year-min-label">0년</span><span id="year-max-label">0년</span></div>
+                        </div>
+                        <div class="filter-group">
                             <div class="filter-group-title">건물연면적 평</div>
                             <div class="range-slider">
                                 <div class="range-track"><div class="range-fill" id="area-fill" style="left: 0%; width: 100%;"></div></div>
@@ -335,6 +354,10 @@
                                 <input type="range" id="price-max" class="range-input" min="1479" max="41667">
                             </div>
                             <div class="range-labels"><span id="price-min-label">1,479만원</span><span id="price-max-label">41,667만원</span></div>
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-title">주차</div>
+                            <label class="toggle-item"><input type="checkbox" id="chk-parking">주차 가능한 건물만</label>
                         </div>
                         <div class="filter-group">
                             <div class="filter-group-title">지도 레이어</div>
@@ -1023,6 +1046,12 @@
             return Number(val).toLocaleString();
         }
 
+        // 연면적평당가(원/평)를 "1,877만원/평" 형태(만원 단위, 천 단위 콤마)로 표시
+        function formatPricePy(won) {
+            if (won === null || won === undefined || isNaN(won)) return '-';
+            return Math.round(won / 10000).toLocaleString() + '만원/평';
+        }
+
         // 원 단위 금액을 "OOO억 OOOO만원" 형태의 한국식 표기로 변환
         function formatWonKr(won) {
             if (won === null || won === undefined || isNaN(won)) return '-';
@@ -1099,7 +1128,7 @@
                 { label: '건물주용도', get: function(a) { return a.mainUse || '-'; } },
                 { label: '대지면적', get: function(a) { return formatNum(a.siteAreaM2) + '㎡ (' + a.siteAreaPy + '평)'; } },
                 { label: '건물연면적', get: function(a) { return formatNum(a.gfaM2) + '㎡ (' + a.gfaPy + '평)'; } },
-                { label: '연면적평당가', get: function(a) { return a.pricePerPyeongWon ? (formatNum(a.pricePerPyeongWon) + '원/평') : '-'; } },
+                { label: '연면적평당가', get: function(a) { return formatPricePy(a.pricePerPyeongWon); } },
                 { label: '최근접역', get: function(a) {
                     var ns = findNearestStation(a.center);
                     return ns ? (ns.name + '역 · 도보 ' + ns.walkMin + '분') : '-';
@@ -1281,7 +1310,7 @@
             currentDetailItem = item;
             var ns = findNearestStation(item.center);
             var nsText = ns ? (ns.name + '역 (' + ns.line + ') · 도보 약 ' + ns.walkMin + '분 (' + ns.distM.toLocaleString() + 'm)') : '-';
-            var pricePyText = item.pricePerPyeongWon ? (formatNum(item.pricePerPyeongWon) + '원/평') : '-';
+            var pricePyText = formatPricePy(item.pricePerPyeongWon);
 
             var html =
                 '<div class="badge-row"><div class="type-badge">🏢 상업용 건물</div>' + compareBtnHtml(item) + '</div>' +
@@ -1320,7 +1349,17 @@
         /* ==========================================================================
            5. 상세 필터 (건물연면적 / 연면적평당가)
            ========================================================================== */
-        var advFilter = { areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999 };
+        var advFilter = { areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999,
+                          askMin: 0, askMax: 999999999, yearMin: 0, yearMax: 999999999, parkingOnly: false };
+
+        function getAssetAskEok(a) { return a.askPriceWon ? a.askPriceWon / 100000000 : null; }
+        function getAssetYear(a) { var y = parseInt(a.builtYear, 10); return isFinite(y) && y > 1000 ? y : null; }
+        // 주차 가능 여부: "없음"/미기재가 아니고 1 이상의 숫자가 있으면 가능
+        function hasParking(a) {
+            var t = String(a.parking === undefined || a.parking === null ? '' : a.parking).trim();
+            if (!t || t === '-' || /없음|불가|무$/.test(t)) return false;
+            return /[1-9]/.test(t);
+        }
 
         function getAssetAreaPy(a) { return parseFloat(a.gfaPy) || 0; }
         function getAssetPricePyManwon(a) { return a.pricePerPyeongWon ? Math.round(a.pricePerPyeongWon / 10000) : null; }
@@ -1330,13 +1369,24 @@
             if (area > 0 && (area < advFilter.areaMin || area > advFilter.areaMax)) return false;
             var price = getAssetPricePyManwon(item);
             if (price !== null && (price < advFilter.priceMin || price > advFilter.priceMax)) return false;
+            var ask = getAssetAskEok(item);
+            if (ask !== null && (ask < advFilter.askMin || ask > advFilter.askMax)) return false;
+            var yr = getAssetYear(item);
+            if (yr !== null && (yr < advFilter.yearMin || yr > advFilter.yearMax)) return false;
+            if (advFilter.parkingOnly && !hasParking(item)) return false;
             return true;
         }
 
         function computeFilterBounds() {
             var areas = currentDataset.assets.map(getAssetAreaPy).filter(function(v) { return v > 0; });
             var prices = currentDataset.assets.map(getAssetPricePyManwon).filter(function(v) { return v !== null; });
+            var asks = currentDataset.assets.map(getAssetAskEok).filter(function(v) { return v !== null; });
+            var years = currentDataset.assets.map(getAssetYear).filter(function(v) { return v !== null; });
             return {
+                askMin: asks.length ? Math.floor(Math.min.apply(null, asks)) : 0,
+                askMax: asks.length ? Math.ceil(Math.max.apply(null, asks)) : 1000,
+                yearMin: years.length ? Math.min.apply(null, years) : 1950,
+                yearMax: years.length ? Math.max.apply(null, years) : 2026,
                 areaMin: areas.length ? Math.floor(Math.min.apply(null, areas)) : 0,
                 areaMax: areas.length ? Math.ceil(Math.max.apply(null, areas)) : 10000,
                 priceMin: prices.length ? Math.floor(Math.min.apply(null, prices)) : 0,
@@ -1354,11 +1404,11 @@
             var rightPct = range > 0 ? ((maxVal - lo) / range) * 100 : 100;
             fillEl.style.left = leftPct + '%';
             fillEl.style.width = Math.max(0, rightPct - leftPct) + '%';
-            document.getElementById(prefix + '-min-label').innerText = Math.round(minVal).toLocaleString() + unit;
-            document.getElementById(prefix + '-max-label').innerText = Math.round(maxVal).toLocaleString() + unit;
+            var fmtV = function(v) { return prefix === 'year' ? String(Math.round(v)) : Math.round(v).toLocaleString(); };
+            document.getElementById(prefix + '-min-label').innerText = fmtV(minVal) + unit;
+            document.getElementById(prefix + '-max-label').innerText = fmtV(maxVal) + unit;
 
-            if (prefix === 'area') { advFilter.areaMin = minVal; advFilter.areaMax = maxVal; }
-            else { advFilter.priceMin = minVal; advFilter.priceMax = maxVal; }
+            advFilter[prefix + 'Min'] = minVal; advFilter[prefix + 'Max'] = maxVal;
         }
 
         function bindRangePair(prefix, unit) {
@@ -1386,8 +1436,19 @@
             priceMinEl.max = priceMaxEl.max = b.priceMax;
             priceMinEl.value = b.priceMin; priceMaxEl.value = b.priceMax;
 
+            var askMinEl = document.getElementById('ask-min'), askMaxEl = document.getElementById('ask-max');
+            askMinEl.min = askMaxEl.min = b.askMin; askMinEl.max = askMaxEl.max = b.askMax;
+            askMinEl.value = b.askMin; askMaxEl.value = b.askMax;
+            var yearMinEl = document.getElementById('year-min'), yearMaxEl = document.getElementById('year-max');
+            yearMinEl.min = yearMaxEl.min = b.yearMin; yearMinEl.max = yearMaxEl.max = b.yearMax;
+            yearMinEl.value = b.yearMin; yearMaxEl.value = b.yearMax;
+            document.getElementById('chk-parking').checked = false;
+            advFilter.parkingOnly = false;
+
             updateRangeUI('area', '평');
             updateRangeUI('price', '만원');
+            updateRangeUI('ask', '억원');
+            updateRangeUI('year', '년');
         }
 
         function resetAdvancedFilters() {
@@ -1397,6 +1458,11 @@
 
         bindRangePair('area', '평');
         bindRangePair('price', '만원');
+        bindRangePair('ask', '억원');
+        bindRangePair('year', '년');
+        document.getElementById('chk-parking').addEventListener('change', function(e) {
+            advFilter.parkingOnly = e.target.checked; renderAssets(currentDataset);
+        });
 
         /* ==========================================================================
            6. 자산(건물) 데이터 가공 - 평 환산 및 연면적평당가 자동 계산
@@ -1509,7 +1575,7 @@
                         '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(' + item._uid + '); updateCompareBadge(); renderAssetList();">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
                         '<div class="row-name">' + item.name + '</div>' +
                         '<div class="row-meta">' + item.jibun + '<br>' +
-                        (item.pricePerPyeongWon ? (formatNum(item.pricePerPyeongWon) + '원/평') : '-') +
+                        (formatPricePy(item.pricePerPyeongWon)) +
                         '</div></div>';
                 });
             }
