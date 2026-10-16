@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부동산 리포트</title>
 
-    <!-- Leaflet 지도 엔진 & 엑셀 파서 (지도가 정상 동작한 것과 동일한 CDN으로 통일) -->
+    <!-- Leaflet 지도 엔진 & 엑셀 파서 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -45,7 +45,6 @@
             font-size: 11.5px; font-weight: 500; color: var(--muted); margin-top: 3px;
             white-space: nowrap;
         }
-        .brand-subtitle #header-report-date { font-weight: 600; color: var(--muted); }
 
         .topbar-center { display: flex; align-items: center; justify-content: center; gap: 14px; flex: 1; min-width: 0; margin-right: 144px; }
 
@@ -123,11 +122,7 @@
         .toggle-item:last-child { margin-bottom: 0; }
         .toggle-item input { margin-right: 8px; width: 15px; height: 15px; accent-color: var(--brand); cursor: pointer; }
 
-        /* 상세 필터: 드롭다운 & 듀얼 레인지 슬라이더 */
-        .filter-select {
-            width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
-            font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; cursor: pointer;
-        }
+        /* 상세 필터: 듀얼 레인지 슬라이더 */
         .range-slider { position: relative; height: 20px; margin: 12px 2px 6px; }
         .range-track { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: #e5e5e5; border-radius: 2px; transform: translateY(-50%); }
         .range-fill { position: absolute; top: 50%; height: 4px; background: var(--brand); border-radius: 2px; transform: translateY(-50%); }
@@ -163,14 +158,13 @@
         }
         .sidebar-content { padding: 28px 26px; flex: 1; overflow-y: auto; position: relative; }
 
-        /* 상세 UI (Airbnb 리스팅 스타일 참고) */
+        /* 상세 UI */
         .badge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
         .type-badge {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+            background: var(--brand-tint); color: var(--brand); border: 1px solid #cfe0ee;
         }
-        .type-badge.land { background: #fef3e6; color: #b5620a; border: 1px solid #fbdcae; }
-        .type-badge.bldg { background: var(--brand-tint); color: var(--brand); border: 1px solid #cfe0ee; }
 
         .compare-add-small {
             border: 1.5px solid var(--brand); background: #ffffff; color: var(--brand);
@@ -190,41 +184,12 @@
         .summary-val-blue { font-size: 18px; font-weight: 800; color: var(--brand); }
         .summary-val-dark { font-size: 18px; font-weight: 800; color: var(--ink); }
 
-        .detail-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 26px; font-size: 13.5px; }
+        .detail-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px; font-size: 13.5px; }
         .detail-item { display: flex; align-items: baseline; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
         .detail-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .detail-label { width: 120px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+        .detail-label { width: 130px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
         .detail-val { flex: 1; font-weight: 600; color: var(--ink); word-break: keep-all; }
-
-        .section-subtitle { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
-        .opinion-box {
-            background: #f7f7f7; border-radius: 14px; padding: 16px 18px;
-            font-size: 13.5px; line-height: 1.65; color: #3a3a3a; font-weight: 500;
-            border-left: 3px solid var(--brand);
-        }
-
-        /* 인근 실거래가 비교 */
-        .compare-btn {
-            width: 100%; margin-top: 20px; padding: 13px; border: none; border-radius: 12px;
-            background: var(--brand); color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer;
-            transition: background .15s;
-        }
-        .compare-btn:hover { background: var(--brand-dark); }
-        #compare-result { margin-top: 16px; }
-        .compare-loading { font-size: 12.5px; color: var(--muted); padding: 10px 0; }
-        .compare-error { font-size: 12.5px; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; line-height: 1.6; }
-        .compare-summary { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-        .compare-verdict { display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; margin-bottom: 12px; }
-        .verdict-high { background: #fef2f2; color: #b91c1c; }
-        .verdict-mid { background: #ecfdf3; color: #15803d; }
-        .verdict-low { background: var(--brand-tint); color: var(--brand); }
-        .compare-chart-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
-        .compare-chart-label { width: 78px; font-size: 11.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
-        .compare-chart-track { flex: 1; background: #f0f0f0; border-radius: 999px; height: 18px; position: relative; overflow: hidden; }
-        .compare-chart-bar { height: 100%; border-radius: 999px; }
-        .compare-chart-val { font-size: 11.5px; font-weight: 700; color: var(--ink); width: 88px; text-align: right; flex-shrink: 0; }
-        .compare-samples { margin-top: 12px; max-height: 200px; overflow-y: auto; border-top: 1px solid var(--line); padding-top: 10px; }
-        .compare-sample-row { font-size: 11px; color: #3a3a3a; font-weight: 600; padding: 7px 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+        .detail-val a { color: var(--brand); text-decoration: underline; }
 
         .empty-side { text-align:center; color:#a3a3a3; margin-top:140px; }
         .empty-side .icon { font-size:40px; margin-bottom:12px; }
@@ -245,19 +210,9 @@
             transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
             transform-origin: center center;
             max-width: 150px; overflow: hidden;
+            background: var(--brand);
         }
         .pin-label { display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-        .pin-land { background: #e8890c; }             /* 토지 - 웜 앰버 */
-        .pin-bldg { background: var(--brand); }          /* 건물 - 브랜드 블루 */
-        .pin-home {
-            display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
-            border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #ffffff;
-            background: linear-gradient(135deg, #1a1a1a, #000000);
-            border: 2px solid #ffd700; box-shadow: 0 0 0 2px rgba(0,0,0,0.15), 0 3px 10px rgba(0,0,0,0.4);
-            white-space: nowrap; cursor: pointer; z-index: 2000;
-            transform: translate(-50%, -100%) scale(var(--marker-scale, 1));
-            transform-origin: center bottom;
-        }
 
         /* 목록형 사이드바 (KPI 박스 클릭 시) */
         .list-header { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
@@ -275,7 +230,6 @@
         .asset-list-item:hover { background: #fafafa; border-color: #d4d4d4; box-shadow: var(--card-shadow); }
         .asset-list-item .row-name { font-weight: 700; font-size: 13.5px; color: var(--ink); margin-bottom: 5px; padding-right: 60px; }
         .asset-list-item .row-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
-        .asset-list-item .row-schedule { font-weight: 700; color: #b5620a; }
         .row-compare-btn {
             position: absolute; top: 12px; right: 14px; z-index: 2;
             border: 1px solid var(--brand); background: #ffffff; color: var(--brand);
@@ -284,22 +238,6 @@
         .row-compare-btn.active { background: var(--brand); color: #fff; }
         .row-compare-btn:hover { background: var(--brand-tint); }
         .row-compare-btn.active:hover { background: var(--brand-dark); }
-
-        .home-compare-toggles { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-        .home-toggle-btn {
-            border: 1px solid var(--brand); background: #ffffff; color: var(--brand);
-            border-radius: 999px; padding: 5px 10px; font-size: 10.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
-        }
-        .home-toggle-btn:hover { background: var(--brand-tint); }
-        .home-toggle-btn.active { background: var(--brand); color: #fff; }
-        .home-toggle-btn.active:hover { background: var(--brand-dark); }
-
-        .sidebar-back-btn {
-            display: none; align-items: center; gap: 5px; flex-shrink: 0;
-            padding: 16px 26px 0; border: none; background: transparent;
-            color: var(--brand); font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: left;
-        }
-        .sidebar-back-btn:hover { text-decoration: underline; }
 
         .station-tooltip { background: var(--ink) !important; color: #fff !important; border: none !important; font-size: 10.5px !important; font-weight: 700 !important; padding: 3px 8px !important; border-radius: 6px !important; }
 
@@ -344,24 +282,20 @@
                 <img class="brand-logo" alt="Pearl Abyss" src="data:image/png;base64,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">
                 <div class="brand-text">
                     <div class="brand-title">부동산 리포트</div>
-                    <div class="brand-subtitle"><span id="header-report-date">2025-05-01 기준</span></div>
+                    <div class="brand-subtitle">광화문·시청 일대 상업용 건물</div>
                 </div>
             </div>
 
             <div class="topbar-center">
                 <div class="topbar-search">
                     <span class="search-icon">🔎</span>
-                    <input type="text" id="search-input" placeholder="지역명 또는 자산명 검색" />
+                    <input type="text" id="search-input" placeholder="지번 또는 건물명칭 검색" />
                     <button onclick="runSearch()">검색</button>
                 </div>
 
                 <div class="topbar-stats">
-                    <div class="stat-pill" id="kpi-box-land">
-                        <span class="stat-label">토지</span>
-                        <span class="stat-val" id="kpi-land-status">0</span>
-                    </div>
                     <div class="stat-pill" id="kpi-box-bldg">
-                        <span class="stat-label">건물</span>
+                        <span class="stat-label">매물</span>
                         <span class="stat-val" id="kpi-bldg-status">0</span>
                     </div>
                 </div>
@@ -384,15 +318,7 @@
                 <div class="map-filter-dropdown">
                     <div class="filter-panel" id="filter-panel">
                         <div class="filter-group">
-                            <div class="filter-group-title">부동산 유형</div>
-                            <select id="flt-type" class="filter-select">
-                                <option value="ALL">전체</option>
-                                <option value="LAND">토지</option>
-                                <option value="BUILDING">건물</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <div class="filter-group-title">공급면적(연면적) 평</div>
+                            <div class="filter-group-title">건물연면적 평</div>
                             <div class="range-slider">
                                 <div class="range-track"><div class="range-fill" id="area-fill"></div></div>
                                 <input type="range" id="area-min" class="range-input">
@@ -401,7 +327,7 @@
                             <div class="range-labels"><span id="area-min-label">0평</span><span id="area-max-label">0평</span></div>
                         </div>
                         <div class="filter-group">
-                            <div class="filter-group-title">평당가 (만원)</div>
+                            <div class="filter-group-title">연면적평당가 (만원/평)</div>
                             <div class="range-slider">
                                 <div class="range-track"><div class="range-fill" id="price-fill"></div></div>
                                 <input type="range" id="price-min" class="range-input">
@@ -411,7 +337,7 @@
                         </div>
                         <div class="filter-group">
                             <div class="filter-group-title">지도 레이어</div>
-                            <label class="toggle-item"><input type="checkbox" id="chk-transit" checked>철도망</label>
+                            <label class="toggle-item"><input type="checkbox" id="chk-transit" checked>지하철 노선</label>
                         </div>
                         <button class="filter-reset-btn" onclick="resetAdvancedFilters()">필터 초기화</button>
                     </div>
@@ -426,124 +352,123 @@
 
             <!-- 우측 상세 정보 사이드바 -->
             <div id="sidebar">
-                <button id="sidebar-back-btn" class="sidebar-back-btn" onclick="goBack()">← 뒤로</button>
                 <div class="sidebar-content" id="sidebar-target">
                     <div class="sidebar-welcome">
                         <div class="icon">📌</div>
-                        지도 위의 자산 마커를 클릭하시면<br>상세 정보가 표출됩니다.
+                        지도 위의 건물 마커를 클릭하시면<br>상세 정보가 표출됩니다.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 내장 데이터셋 -->
+    <!-- 내장 데이터셋 (서울 4대문안 / 광화문·시청 일대, 1,000억원 미만 상업용 건물) -->
     <script id="dataset-script">
         var currentDataset = {
-            reportDate: null,
             assets: [
                 {
-                    type: "LAND",
-                    code: "LND-2025-01",
-                    name: "판교 제2테크노밸리 상업·업무 A1",
-                    address: "경기도 성남시 분당구 삼평동 642",
-                    schedule: "2025년 05월 공급공고 (D-40)",
-                    scheduleYm: 202505,
-                    areaM2: 3850,
-                    areaPy: "1,164.6",
-                    zoning: "일반상업지역 / 업무시설용지",
-                    bcrFar: "건폐율 60% / 용적률 400% / 최고 15층",
-                    pricePy: "4,800만 원/평",
-                    totalPrice: "약 559억 원",
-                    center: [37.4093, 127.1001],
-                    opinion: "신분당선 판교역 인근 및 월곶판교선(서판교역) 수혜. 테크 대기업 사옥 수요 최상위.",
-                    roadview: ""
+                    jibun: "서울특별시 종로구 세종로 149",
+                    name: "광화문 센트럴 오피스타워",
+                    roadview: "",
+                    askPriceWon: 92000000000,
+                    builtYear: 2011,
+                    floors: "지하 4층 / 지상 15층",
+                    parking: "118대 (법정 외 36대)",
+                    zoning: "일반상업지역",
+                    mainUse: "업무시설",
+                    siteAreaM2: 1480,
+                    gfaM2: 16200,
+                    listingUrl: "",
+                    center: [37.5726, 126.9770]
                 },
                 {
-                    type: "LAND",
-                    code: "LND-2025-02",
-                    name: "수서역세권 공공주택지구 복합업무 B-2",
-                    address: "서울특별시 강남구 수서동 728",
-                    schedule: "2026년 03월 공급 예정",
-                    scheduleYm: 202603,
-                    areaM2: 5420,
-                    areaPy: "1,639.6",
-                    zoning: "중심상업지역 / 복합환승·업무",
-                    bcrFar: "건폐율 70% / 용적률 800% / 최고 40층",
-                    pricePy: "최고가 경쟁입찰",
-                    totalPrice: "예정가 1,178억 원 추산",
-                    center: [37.4872, 127.1025],
-                    opinion: "위례과천선 환승 예정, SRT·GTX-A 복합환승센터 직결 랜드마크 필지.",
-                    roadview: ""
+                    jibun: "서울특별시 중구 태평로1가 25",
+                    name: "시청역 프런트오피스빌딩",
+                    roadview: "",
+                    askPriceWon: 68000000000,
+                    builtYear: 2006,
+                    floors: "지하 3층 / 지상 12층",
+                    parking: "74대",
+                    zoning: "중심상업지역",
+                    mainUse: "업무시설",
+                    siteAreaM2: 920,
+                    gfaM2: 9850,
+                    listingUrl: "",
+                    center: [37.5658, 126.9772]
                 },
                 {
-                    type: "BUILDING",
-                    code: "BLD-2025-03",
-                    name: "인덕원 스테이션 타워",
-                    address: "경기도 안양시 동안구 관양동 1488",
-                    dealType: "통매각 / 밸류애드 검토",
-                    gfaM2: 9800,
-                    gfaPy: "2,964.5",
-                    bareaM2: 680,
-                    bareaPy: "205.7",
-                    lareaM2: 950,
-                    lareaPy: "287.4",
-                    floors: "지하 2층 / 지상 8층",
-                    completion: "2014년 11월",
-                    pricePy: "1,950만 원/평 (연면적 기준)",
-                    totalPrice: "578억 원",
-                    center: [37.4014, 126.9768],
-                    opinion: "4호선 및 월곶판교선 환승 예정 인덕원역 초인접. 리모델링을 통한 가치 증대 유망.",
-                    roadview: ""
+                    jibun: "서울특별시 종로구 종로1가 24",
+                    name: "종로 그랑프리 빌딩",
+                    roadview: "",
+                    askPriceWon: 45000000000,
+                    builtYear: 1998,
+                    floors: "지하 2층 / 지상 9층",
+                    parking: "32대",
+                    zoning: "일반상업지역",
+                    mainUse: "업무시설 / 근린상가",
+                    siteAreaM2: 630,
+                    gfaM2: 5120,
+                    listingUrl: "",
+                    center: [37.5703, 126.9823]
+                },
+                {
+                    jibun: "서울특별시 중구 다동 1",
+                    name: "다동 비즈니스센터",
+                    roadview: "",
+                    askPriceWon: 31500000000,
+                    builtYear: 2015,
+                    floors: "지하 2층 / 지상 10층",
+                    parking: "28대",
+                    zoning: "중심상업지역",
+                    mainUse: "업무시설",
+                    siteAreaM2: 410,
+                    gfaM2: 3680,
+                    listingUrl: "",
+                    center: [37.5675, 126.9803]
                 }
             ]
         };
     </script>
 
     <script>
+        /* ==========================================================================
+           0. 공용 포맷 헬퍼
+           ========================================================================== */
+        function formatNum(val) {
+            if (val === null || val === undefined || val === '' || isNaN(val)) return '-';
+            return Number(val).toLocaleString();
+        }
+
+        // 원 단위 금액을 "OOO억 OOOO만원" 형태의 한국식 표기로 변환
+        function formatWonKr(won) {
+            if (won === null || won === undefined || isNaN(won)) return '-';
+            won = Math.round(won);
+            var eok = Math.floor(won / 100000000);
+            var rest = won % 100000000;
+            var man = Math.round(rest / 10000);
+            var s = '';
+            if (eok > 0) s += eok.toLocaleString() + '억';
+            if (man > 0) s += (s ? ' ' : '') + man.toLocaleString() + '만원';
+            if (!s) s = won.toLocaleString() + '원';
+            return s + (eok > 0 && man === 0 ? '원' : '');
+        }
+
+        function parseLatLng(text) {
+            if (!text) return [NaN, NaN];
+            var parts = String(text).split(',').map(function(s) { return parseFloat(s.trim()); });
+            return [parts[0], parts[1]];
+        }
+
+        /* ==========================================================================
+           1. 비교함 (최대 3건)
+           ========================================================================== */
         var currentDetailItem = null;
         var compareList = [];
 
-        // ============================== 사이드바 뒤로가기 네비게이션 ==============================
-        var navStack = [];
-        var currentView = null;
+        function isInCompare(uid) { return compareList.indexOf(uid) !== -1; }
 
-        function pushHistory(descriptor) {
-            if (currentView) { navStack.push(currentView); }
-            currentView = descriptor;
-            updateBackButton();
-        }
-
-        function updateBackButton() {
-            var btn = document.getElementById('sidebar-back-btn');
-            if (!btn) return;
-            btn.style.display = navStack.length > 0 ? 'flex' : 'none';
-        }
-
-        function goBack() {
-            if (navStack.length === 0) return;
-            var prev = navStack.pop();
-            currentView = null; // 재-push 방지 (renderX가 다시 pushHistory 하도록 아래에서 skipHistory=true 사용)
-            if (prev.type === 'detail') { renderSidebarDetail(prev.item, true); }
-            else if (prev.type === 'list') { renderAssetList(prev.assetType, true); }
-            else if (prev.type === 'search') { runSearch(prev.query, true); }
-            else if (prev.type === 'compare') { renderCompareTable(true); }
-            else if (prev.type === 'welcome') { showWelcome(true); }
-            currentView = prev;
-            updateBackButton();
-        }
-
-        function showWelcome(skipHistory) {
-            if (!skipHistory) { pushHistory({ type: 'welcome' }); } else { currentView = { type: 'welcome' }; }
-            document.getElementById('sidebar-target').innerHTML =
-                '<div class="sidebar-welcome"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>부동산 상세 정보를 확인할 수 있습니다.</div>';
-            updateBackButton();
-        }
-
-        function isInCompare(code) { return compareList.indexOf(code) !== -1; }
-
-        function toggleCompare(code) {
-            var idx = compareList.indexOf(code);
+        function toggleCompare(uid) {
+            var idx = compareList.indexOf(uid);
             if (idx >= 0) {
                 compareList.splice(idx, 1);
             } else {
@@ -551,7 +476,7 @@
                     alert('비교함에는 최대 3건까지만 담을 수 있습니다. 기존 항목을 먼저 제거해 주세요.');
                     return;
                 }
-                compareList.push(code);
+                compareList.push(uid);
             }
             updateCompareBadge();
         }
@@ -567,54 +492,45 @@
             }
         }
 
-        function renderCompareTable(skipHistory) {
-            if (!skipHistory) { pushHistory({ type: 'compare' }); } else { currentView = { type: 'compare' }; }
+        function findAssetByUid(uid) {
+            return currentDataset.assets.filter(function(a) { return a._uid === uid; })[0];
+        }
 
-            var items = compareList.map(function(code) {
-                return findAssetByCode(code);
-            }).filter(Boolean);
+        function renderCompareTable() {
+            var items = compareList.map(findAssetByUid).filter(Boolean);
 
             if (items.length === 0) {
                 document.getElementById('sidebar-target').innerHTML =
-                    '<div class="empty-side"><div class="icon">⚖️</div>비교함에 담긴 자산이 없습니다.<br>목록 또는 상세정보에서 "비교함에 추가"를 눌러주세요.</div>';
-                updateBackButton();
+                    '<div class="empty-side"><div class="icon">⚖️</div>비교함에 담긴 건물이 없습니다.<br>목록 또는 상세정보에서 "비교함에 추가"를 눌러주세요.</div>';
                 return;
             }
 
             var rows = [
-                { label: '유형', get: function(a) { return a.type === 'LAND' ? '🌱 토지' : '🏢 건물'; } },
-                { label: '소재지', get: function(a) { return a.address; } },
-                { label: '면적', get: function(a) {
-                    return a.type === 'LAND'
-                        ? (formatNum(a.areaM2) + '㎡ (' + a.areaPy + '평)')
-                        : (formatNum(a.gfaM2) + '㎡ (' + a.gfaPy + '평)');
-                } },
-                { label: '평당가', get: function(a) { return a.pricePy || '-'; } },
-                { label: '총금액', get: function(a) { return a.totalPrice || '-'; } },
-                { label: '일정/준공', get: function(a) { return a.type === 'LAND' ? (a.schedule || '-') : (a.completion || '-'); } },
+                { label: '지번', get: function(a) { return a.jibun || '-'; } },
+                { label: '호가', get: function(a) { return formatWonKr(a.askPriceWon); } },
+                { label: '건축년도', get: function(a) { return a.builtYear || '-'; } },
+                { label: '층', get: function(a) { return a.floors || '-'; } },
+                { label: '주차', get: function(a) { return a.parking || '-'; } },
+                { label: '용도지역', get: function(a) { return a.zoning || '-'; } },
+                { label: '건물주용도', get: function(a) { return a.mainUse || '-'; } },
+                { label: '대지면적', get: function(a) { return formatNum(a.siteAreaM2) + '㎡ (' + a.siteAreaPy + '평)'; } },
+                { label: '건물연면적', get: function(a) { return formatNum(a.gfaM2) + '㎡ (' + a.gfaPy + '평)'; } },
+                { label: '연면적평당가', get: function(a) { return a.pricePerPyeongWon ? (formatNum(a.pricePerPyeongWon) + '원/평') : '-'; } },
                 { label: '최근접역', get: function(a) {
                     var ns = findNearestStation(a.center);
                     return ns ? (ns.name + '역 · 도보 ' + ns.walkMin + '분') : '-';
                 } },
-                { label: '인근시세 대비', get: function(a) {
-                    return '<span id="verdict-cell-' + a.code + '" style="font-size:11px; color:#a3a3a3;">⏳ 조회 중...</span>';
-                } }
+                { label: '매물링크', get: function(a) { return a.listingUrl ? ('<a href="' + a.listingUrl + '" target="_blank" rel="noopener">열기 ↗</a>') : '-'; } }
             ];
 
             var html = '<div class="list-header">⚖️ 자산 비교 (' + items.length + '건)</div>' +
-                        '<div class="list-subheader-row">' +
-                            '<div class="list-subheader">최대 3건까지 나란히 비교할 수 있습니다.</div>' +
-                            '<div class="home-compare-toggles">' +
-                                '<button class="home-toggle-btn' + (isInCompare('HOME-BLDG') ? ' active' : '') + '" onclick="toggleCompare(\'HOME-BLDG\'); renderCompareTable(true); updateCompareBadge();">' + (isInCompare('HOME-BLDG') ? '✓ 홈 원 건물' : '🏢 홈 원 건물') + '</button>' +
-                                '<button class="home-toggle-btn' + (isInCompare('HOME-LAND') ? ' active' : '') + '" onclick="toggleCompare(\'HOME-LAND\'); renderCompareTable(true); updateCompareBadge();">' + (isInCompare('HOME-LAND') ? '✓ 홈 원 토지' : '🌳 홈 원 토지') + '</button>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="compare-table" style="grid-template-columns: 68px repeat(' + items.length + ', 1fr);">' +
+                        '<div class="list-subheader">최대 3건까지 나란히 비교할 수 있습니다.</div>' +
+                        '<div class="compare-table" style="grid-template-columns: 80px repeat(' + items.length + ', 1fr);">' +
                         '<div class="ct-cell ct-label"></div>';
 
             items.forEach(function(a) {
                 html += '<div class="ct-cell ct-head">' +
-                            '<button class="ct-remove" onclick="toggleCompare(\'' + a.code + '\'); renderCompareTable(true); updateCompareBadge();">✕</button>' +
+                            '<button class="ct-remove" onclick="toggleCompare(' + a._uid + '); renderCompareTable(); updateCompareBadge();">✕</button>' +
                             '<div class="ct-head-name">' + a.name + '</div>' +
                         '</div>';
             });
@@ -624,428 +540,14 @@
                 items.forEach(function(a) { html += '<div class="ct-cell">' + r.get(a) + '</div>'; });
             });
 
-            html += '</div>' +
-                    '<div style="font-size:10.5px; color:#a3a3a3; margin-top:10px;">※ "인근시세 대비"는 국토교통부 실거래가 오픈API(최근 12개월, 동일 법정동 우선) 기준 참고용 산출값이며, 실제 감정평가를 대체하지 않습니다.</div>';
+            html += '</div>';
             document.getElementById('sidebar-target').innerHTML = html;
-            updateBackButton();
-
-            // 비교표 렌더링 후, 각 자산의 인근시세 대비 평가를 비동기로 채워 넣음 (홈 원 데이터는 참고용이라 조회 생략)
-            items.forEach(function(a) {
-                if (a.code === 'HOME-BLDG' || a.code === 'HOME-LAND') {
-                    var cell = document.getElementById('verdict-cell-' + a.code);
-                    if (cell) { cell.innerHTML = '<span style="color:#a3a3a3;">-</span>'; }
-                } else {
-                    fetchCompareVerdict(a);
-                }
-            });
-        }
-
-        // 비교표의 "인근시세 대비" 셀 하나를 채우는 경량 조회 (표시용 요약치만 계산, 상세 목록/그래프는 만들지 않음)
-        function fetchCompareVerdict(item) {
-            var cell = document.getElementById('verdict-cell-' + item.code);
-            if (!cell) return;
-
-            var subjectWon = parsePricePyToWon(item.pricePy);
-            if (!subjectWon) { cell.innerHTML = '<span style="color:#a3a3a3;">가격정보 없음</span>'; return; }
-
-            var lawdCd = guessLawdCode(item.address);
-            if (!lawdCd) { cell.innerHTML = '<span style="color:#a3a3a3;">지역 인식 불가</span>'; return; }
-
-            var type = item.type;
-            var months = recentYearMonths(12);
-            var dongName = extractDongName(item.address);
-
-            Promise.all(months.map(function(ym) { return fetchOneMonth(type, lawdCd, ym).catch(function() { return []; }); }))
-                .then(function(results) {
-                    var all = [].concat.apply([], results);
-                    if (all.length === 0) { cell.innerHTML = '<span style="color:#a3a3a3;">비교자료 없음</span>'; return; }
-
-                    var narrowed = dongName ? all.filter(function(r) { return r.umdNm === dongName; }) : [];
-                    var used = narrowed.length >= 3 ? narrowed : all;
-                    var sixMonthsAgo = monthsAgoYYYYMM(6);
-                    var recentUsed = used.filter(function(r) { return itemYYYYMM(r) >= sixMonthsAgo; });
-                    if (recentUsed.length === 0) { recentUsed = used; }
-
-                    var pricesPy = [];
-                    recentUsed.forEach(function(r) {
-                        var w = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
-                        var a2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
-                        if (w > 0 && a2 > 0) pricesPy.push((w / a2) * 3.3058);
-                    });
-
-                    if (pricesPy.length === 0) { cell.innerHTML = '<span style="color:#a3a3a3;">비교자료 없음</span>'; return; }
-
-                    var avg = pricesPy.reduce(function(s, v) { return s + v; }, 0) / pricesPy.length;
-                    var diffPct = ((subjectWon - avg) / avg) * 100;
-                    var cls, text;
-                    if (diffPct > 15) { cls = 'verdict-high'; text = '고평가 (+' + diffPct.toFixed(1) + '%)'; }
-                    else if (diffPct < -15) { cls = 'verdict-low'; text = '저평가 (' + diffPct.toFixed(1) + '%)'; }
-                    else { cls = 'verdict-mid'; text = '적정 (' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%)'; }
-
-                    cell.innerHTML = '<span class="compare-verdict ' + cls + '" style="margin:0; font-size:11px;">' + text + '</span>';
-                })
-                .catch(function() {
-                    cell.innerHTML = '<span style="color:#a3a3a3;">조회 실패</span>';
-                });
-        }
-
-
-        function formatNum(val) {
-            if (val === undefined || val === null || val === '') return "-";
-            var num = Number(String(val).replace(/,/g, ''));
-            return isNaN(num) ? "-" : num.toLocaleString();
-        }
-
-        // "27,000" (만원 단위 문자열) -> "2.7억원" 형태로 변환
-        function formatEok(manwonStr) {
-            var num = Number(String(manwonStr || '').replace(/,/g, ''));
-            if (isNaN(num)) return "-";
-            var eok = num / 10000;
-            return (Math.round(eok * 10) / 10).toLocaleString() + "억원";
-        }
-
-        function todayReportDate() {
-            var d = new Date();
-            return d.getFullYear() + "년 " + String(d.getMonth() + 1).padStart(2, '0') + "월 " + String(d.getDate()).padStart(2, '0') + "일 기준";
         }
 
         /* ==========================================================================
-           국토교통부 실거래가 오픈API 연동 (거래사례비교법)
-           - 주의: apis.data.go.kr는 브라우저 직접 호출 시 CORS로 차단될 수 있습니다.
-             차단되면 아래 fetch가 실패하며, 실패 원인을 화면에 표시합니다.
+           2. 지하철 노선망 데이터 & 최근접역 계산 (Haversine 공식)
            ========================================================================== */
-        var MOLIT_SERVICE_KEY = "d9596730a42fe818ca178082ce2b3872f8d70a4a4400b2d6f3bd9b4cdf54381d";
-        var MOLIT_LAND_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade";
-        var MOLIT_BLDG_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade";
-
-        // 법정동 시군구 코드(행정표준코드, 5자리) - 서울 25개 구 + 경기 남부 주요 시/구
-        // 길게(구체적으로) 일치하는 명칭을 먼저 찾도록 배열 순서를 구체적인 것부터 배치합니다.
-        var LAWD_TABLE = [
-            ["수원시 장안구","41111"],["수원시 권선구","41113"],["수원시 팔달구","41115"],["수원시 영통구","41117"],
-            ["성남시 수정구","41131"],["성남시 중원구","41133"],["성남시 분당구","41135"],
-            ["안양시 만안구","41171"],["안양시 동안구","41173"],
-            ["부천시 원미구","41192"],["부천시 소사구","41194"],["부천시 오정구","41196"],
-            ["안산시 상록구","41271"],["안산시 단원구","41273"],
-            ["고양시 덕양구","41281"],["고양시 일산동구","41285"],["고양시 일산서구","41287"],
-            ["용인시 처인구","41461"],["용인시 기흥구","41463"],["용인시 수지구","41465"],
-            ["화성시","41590"],["평택시","41220"],["의정부시","41150"],["광명시","41210"],
-            ["동두천시","41250"],["과천시","41290"],["구리시","41310"],["남양주시","41360"],
-            ["오산시","41370"],["시흥시","41390"],["군포시","41410"],["의왕시","41430"],
-            ["하남시","41450"],["파주시","41480"],["이천시","41500"],["안성시","41550"],
-            ["김포시","41570"],["광주시","41610"],["양주시","41630"],["포천시","41650"],
-            ["여주시","41670"],["연천군","41800"],["가평군","41820"],["양평군","41830"],
-            ["종로구","11110"],["중구","11140"],["용산구","11170"],["성동구","11200"],["광진구","11215"],
-            ["동대문구","11230"],["중랑구","11260"],["성북구","11290"],["강북구","11305"],["도봉구","11320"],
-            ["노원구","11350"],["은평구","11380"],["서대문구","11410"],["마포구","11440"],["양천구","11470"],
-            ["강서구","11500"],["구로구","11530"],["금천구","11545"],["영등포구","11560"],["동작구","11590"],
-            ["관악구","11620"],["서초구","11650"],["강남구","11680"],["송파구","11710"],["강동구","11740"]
-        ];
-
-        function guessLawdCode(address) {
-            if (!address) return null;
-            for (var i = 0; i < LAWD_TABLE.length; i++) {
-                if (address.indexOf(LAWD_TABLE[i][0]) !== -1) { return LAWD_TABLE[i][1]; }
-            }
-            return null;
-        }
-
-        // 주소에서 법정동(동/읍/면) 이름 추출 (예: "삼평동 642" -> "삼평동")
-        function extractDongName(address) {
-            if (!address) return null;
-            var m = address.match(/([가-힣0-9]+(동|읍|면))\s*[\d]/);
-            return m ? m[1] : null;
-        }
-
-        // 최근 n개월의 계약년월(YYYYMM) 배열 생성
-        function recentYearMonths(n) {
-            var arr = [];
-            var d = new Date();
-            for (var i = 0; i < n; i++) {
-                arr.push(d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0'));
-                d.setMonth(d.getMonth() - 1);
-            }
-            return arr;
-        }
-
-        // 거래 항목의 계약년월을 정수(YYYYMM)로 변환 (최근 N개월 필터링용)
-        function itemYYYYMM(r) { return parseInt(String(r.dealYear) + String(r.dealMonth).padStart(2, '0'), 10); }
-        function monthsAgoYYYYMM(n) {
-            var d = new Date(); d.setMonth(d.getMonth() - n);
-            return d.getFullYear() * 100 + (d.getMonth() + 1);
-        }
-
-        // "4,800만 원/평" 등의 텍스트에서 평당가(원) 추출
-        // "37.4093, 127.1001" 형식의 단일 필드를 [위도, 경도] 배열로 변환
-        function parseLatLng(text) {
-            if (!text) return [NaN, NaN];
-            var parts = String(text).split(',').map(function(s) { return parseFloat(s.trim()); });
-            return [parts[0], parts[1]];
-        }
-
-        function parsePricePyToWon(text) {
-            if (!text) return null;
-            var m = text.match(/([\d,]+(?:\.\d+)?)\s*(억|만)?\s*원/);
-            if (!m) return null;
-            var num = parseFloat(m[1].replace(/,/g, ''));
-            if (isNaN(num)) return null;
-            if (m[2] === '억') { num = num * 100000000; }
-            else if (m[2] === '만') { num = num * 10000; }
-            return num;
-        }
-
-        function xmlText(node, tag) {
-            var el = node.getElementsByTagName(tag)[0];
-            return el ? el.textContent.trim() : '';
-        }
-
-        // 국토부 API 1개월치 호출 (XML 파싱)
-        function fetchOneMonth(type, lawdCd, ym) {
-            var url = (type === 'LAND' ? MOLIT_LAND_URL : MOLIT_BLDG_URL) +
-                '?serviceKey=' + MOLIT_SERVICE_KEY +
-                '&LAWD_CD=' + lawdCd + '&DEAL_YMD=' + ym + '&numOfRows=200&pageNo=1';
-
-            return fetch(url).then(function(res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.text();
-            }).then(function(text) {
-                var xml = new DOMParser().parseFromString(text, 'text/xml');
-                var parseErr = xml.getElementsByTagName('parsererror');
-                if (parseErr.length > 0) throw new Error('XML 파싱 실패');
-
-                var resultCode = xmlText(xml, 'resultCode');
-                if (resultCode && resultCode !== '000' && resultCode !== '00') {
-                    throw new Error('API 오류코드 ' + resultCode + ' (' + xmlText(xml, 'resultMsg') + ')');
-                }
-
-                var items = xml.getElementsByTagName('item');
-                var out = [];
-                for (var i = 0; i < items.length; i++) {
-                    var it = items[i];
-                    if (type === 'LAND') {
-                        out.push({
-                            umdNm: xmlText(it, 'umdNm'),
-                            jibun: xmlText(it, 'jibun'),
-                            jimok: xmlText(it, 'jimok'),
-                            dealAmount: xmlText(it, 'dealAmount'),
-                            dealArea: xmlText(it, 'dealArea'),
-                            landUse: xmlText(it, 'landUse'),
-                            dealYear: xmlText(it, 'dealYear'), dealMonth: xmlText(it, 'dealMonth'), dealDay: xmlText(it, 'dealDay')
-                        });
-                    } else {
-                        out.push({
-                            umdNm: xmlText(it, 'umdNm'),
-                            jibun: xmlText(it, 'jibun'),
-                            dealAmount: xmlText(it, 'dealAmount'),
-                            buildingAr: xmlText(it, 'buildingAr'),
-                            buildingUse: xmlText(it, 'buildingUse'),
-                            landUse: xmlText(it, 'landUse'),
-                            buildYear: xmlText(it, 'buildYear'),
-                            dealYear: xmlText(it, 'dealYear'), dealMonth: xmlText(it, 'dealMonth'), dealDay: xmlText(it, 'dealDay')
-                        });
-                    }
-                }
-                return out;
-            });
-        }
-
-        // "인근 실거래가 비교 분석" 토글: 처음 누르면 조회 후 펼침, 다시 누르면 접힘, 또 누르면(캐시 있으면) 재조회 없이 다시 펼침
-        var compareAnalysisCache = {}; // code -> 렌더링된 html (재클릭 시 재조회 방지)
-
-        function toggleMarketComparison() {
-            var resultBox = document.getElementById('compare-result');
-            var chevron = document.getElementById('compare-analysis-chevron');
-            var isOpen = resultBox.style.display !== 'none';
-
-            if (isOpen) {
-                resultBox.style.display = 'none';
-                chevron.innerText = '▾';
-                return;
-            }
-
-            resultBox.style.display = 'block';
-            chevron.innerText = '▴';
-
-            var code = currentDetailItem ? currentDetailItem.code : null;
-            if (code && compareAnalysisCache[code]) {
-                resultBox.innerHTML = compareAnalysisCache[code]; // 캐시된 결과 재사용 (재조회 없음)
-                return;
-            }
-            runMarketComparison();
-        }
-
-        function runMarketComparison() {
-            var item = currentDetailItem;
-            if (!item) return;
-            var resultBox = document.getElementById('compare-result');
-            resultBox.innerHTML = '<div class="compare-loading">🔎 인근 지역 실거래가를 조회하고 있습니다 (최근 12개월)...</div>';
-
-            var lawdCd = guessLawdCode(item.address);
-            if (!lawdCd) {
-                resultBox.innerHTML = '<div class="compare-error">소재지 주소에서 지역(시군구)을 자동으로 인식하지 못했습니다.<br>서울 25개 구 또는 경기 남부 주요 시/구 범위 내 주소인지 확인해 주세요.</div>';
-                return;
-            }
-
-            var type = item.type;
-            var months = recentYearMonths(12);
-            var dongName = extractDongName(item.address);
-
-            Promise.all(months.map(function(ym) { return fetchOneMonth(type, lawdCd, ym).catch(function() { return []; }); }))
-                .then(function(results) {
-                    var all = [].concat.apply([], results);
-                    if (all.length === 0) {
-                        resultBox.innerHTML = '<div class="compare-error">이 환경에서 국토교통부 실거래가 API 호출이 차단되었거나(CORS), 최근 12개월간 해당 지역 거래 데이터가 없습니다.<br>브라우저 개발자도구(F12) → Network 탭에서 실패 원인을 확인해 주세요.</div>';
-                        return;
-                    }
-
-                    // 우선 법정동(umdNm) 일치로 좁히고, 표본이 너무 적으면 시군구 전체로 확대
-                    var narrowed = dongName ? all.filter(function(r) { return r.umdNm === dongName; }) : [];
-                    var used = narrowed.length >= 3 ? narrowed : all;
-                    var scope = narrowed.length >= 3 ? ('법정동 "' + dongName + '" 일치') : '시군구 전체 (동 일치 표본 부족)';
-
-                    // 상단 요약(적정성 판단)은 최근 6개월 거래만으로 계산 (과거 시세 희석 방지)
-                    var sixMonthsAgo = monthsAgoYYYYMM(6);
-                    var recentUsed = used.filter(function(r) { return itemYYYYMM(r) >= sixMonthsAgo; });
-                    if (recentUsed.length === 0) { recentUsed = used; } // 최근 6개월 거래가 없으면 전체 기간으로 대체
-
-                    var pricesPy = [];
-                    recentUsed.forEach(function(r) {
-                        var amountWon = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000; // 만원 -> 원
-                        var areaM2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
-                        if (amountWon > 0 && areaM2 > 0) {
-                            pricesPy.push((amountWon / areaM2) * 3.3058);
-                        }
-                    });
-
-                    if (pricesPy.length === 0) {
-                        resultBox.innerHTML = '<div class="compare-error">거래 건수는 조회되었으나 면적/금액 정보가 불완전해 평당가를 계산할 수 없습니다.</div>';
-                        return;
-                    }
-
-                    pricesPy.sort(function(a, b) { return a - b; });
-                    var avg = pricesPy.reduce(function(s, v) { return s + v; }, 0) / pricesPy.length;
-                    var median = pricesPy[Math.floor(pricesPy.length / 2)];
-
-                    var subjectWon = parsePricePyToWon(item.pricePy);
-
-                    var html = '<div class="compare-summary">비교 범위: ' + scope + ' · 최근 6개월 기준 · 표본 ' + pricesPy.length + '건</div>';
-
-                    if (subjectWon) {
-                        var diffPct = ((subjectWon - avg) / avg) * 100;
-                        var verdictClass = 'verdict-mid', verdictText = '적정 수준';
-                        if (diffPct > 15) { verdictClass = 'verdict-high'; verdictText = '인근 대비 고평가 (+' + diffPct.toFixed(1) + '%)'; }
-                        else if (diffPct < -15) { verdictClass = 'verdict-low'; verdictText = '인근 대비 저평가 (' + diffPct.toFixed(1) + '%)'; }
-                        else { verdictText = '인근 시세와 유사 (' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%)'; }
-                        html += '<div class="compare-verdict ' + verdictClass + '">' + verdictText + '</div>';
-
-                        var maxVal = Math.max(subjectWon, avg) * 1.15;
-                        html += barRow('본 자산', subjectWon, maxVal, '#004986');
-                        html += barRow('인근 평균', avg, maxVal, '#94a3b8');
-                        html += barRow('인근 중앙값', median, maxVal, '#cbd5e1');
-                    } else {
-                        html += '<div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">본 자산의 평당가가 숫자로 인식되지 않아(예: "최고가 경쟁입찰") 직접 비교는 생략합니다.</div>';
-                        var maxVal2 = Math.max.apply(null, pricesPy) * 1.1;
-                        html += barRow('인근 평균', avg, maxVal2, '#94a3b8');
-                        html += barRow('인근 중앙값', median, maxVal2, '#cbd5e1');
-                    }
-
-                    // 월별 평당가 추이 (최근 12개월) - 상단 요약과 동일한 '월' 단위로 집계해 숫자 해석 일관성 유지
-                    var monthlyAvg = months.map(function(ym) {
-                        var ymInt = parseInt(ym, 10);
-                        var mItems = used.filter(function(r) { return itemYYYYMM(r) === ymInt; });
-                        var mPrices = [];
-                        mItems.forEach(function(r) {
-                            var w = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
-                            var a2 = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
-                            if (w > 0 && a2 > 0) mPrices.push((w / a2) * 3.3058);
-                        });
-                        var mAvg = mPrices.length ? mPrices.reduce(function(s, v) { return s + v; }, 0) / mPrices.length : null;
-                        return { label: ym.slice(4, 6) + '월', avg: mAvg, count: mPrices.length };
-                    }).reverse();
-
-                    html += '<div class="section-subtitle" style="font-size:13px; margin-top:20px;">월별 평당가 추이 (최근 12개월)</div>';
-                    html += renderTrendChart(monthlyAvg);
-
-                    // 최근 거래 목록은 최근 6개월 표본에서 우선 표시 (없으면 전체 기간에서)
-                    var sampleSource = recentUsed.length > 0 ? recentUsed : used;
-                    html += '<div class="compare-samples">';
-                    sampleSource.slice(0, 8).forEach(function(r) {
-                        var areaVal = parseFloat(type === 'LAND' ? r.dealArea : r.buildingAr);
-                        var amountWon2 = parseFloat(String(r.dealAmount).replace(/,/g, '')) * 10000;
-                        var pyPrice = (amountWon2 > 0 && areaVal > 0) ? Math.round((amountWon2 / areaVal) * 3.3058 / 10000) : null;
-                        var eokWon = formatEok(r.dealAmount);
-
-                        var line1 = r.dealYear + '.' + r.dealMonth + '.' + r.dealDay + ' · ' + (r.umdNm || '-') + ' ' + (r.jibun || '') +
-                            ' · 거래금액 ' + eokWon + ' · 평당가 ' + (pyPrice !== null ? formatNum(pyPrice) + '만원/평' : '-');
-
-                        var line2 = type === 'LAND'
-                            ? '용도지역 ' + (r.landUse || '-') + ' · 지목 ' + (r.jimok || '-') + ' · 면적 ' + formatNum(r.dealArea) + '㎡'
-                            : '용도지역 ' + (r.landUse || '-') + ' · 건물주용도 ' + (r.buildingUse || '-') + ' · 건축년도 ' + (r.buildYear || '-') + ' · 건물면적 ' + formatNum(r.buildingAr) + '㎡';
-
-                        html += '<div class="compare-sample-row"><div>' + line1 + '</div><div style="color:#94a3b8; margin-top:2px;">' + line2 + '</div></div>';
-                    });
-                    html += '</div>';
-                    html += '<div style="font-size:10.5px; color:#94a3b8; margin-top:8px;">※ 국토교통부 실거래가 오픈API 기반 참고용 산출값이며, 실제 감정평가를 대체하지 않습니다.</div>';
-
-                    resultBox.innerHTML = html;
-                    compareAnalysisCache[item.code] = html; // 다음 토글부터는 재조회 없이 재사용
-                })
-                .catch(function(err) {
-                    resultBox.innerHTML = '<div class="compare-error">실거래가 조회 중 오류가 발생했습니다: ' + err.message + '<br>이 환경(사내망 등)에서 apis.data.go.kr 접속이 차단되어 있을 수 있습니다.</div>';
-                });
-        }
-
-        function barRow(label, value, maxVal, color) {
-            var pct = Math.max(2, Math.min(100, (value / maxVal) * 100));
-            return '<div class="compare-chart-row">' +
-                '<div class="compare-chart-label">' + label + '</div>' +
-                '<div class="compare-chart-track"><div class="compare-chart-bar" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
-                '<div class="compare-chart-val">' + Math.round(value / 10000).toLocaleString() + '만원/평</div>' +
-                '</div>';
-        }
-
-        // 최근 6개월 평당가 추이를 간단한 SVG 라인 차트로 렌더링
-        function renderTrendChart(monthlyAvg) {
-            var valid = monthlyAvg.filter(function(m) { return m.avg !== null; });
-            if (valid.length < 2) {
-                return '<div style="font-size:12px; color:#a3a3a3; margin-bottom:16px;">추이를 그리기엔 월별 거래 표본이 부족합니다.</div>';
-            }
-
-            var W = 460, H = 100, padL = 44, padR = 12, padT = 14, padB = 22;
-            var vals = valid.map(function(m) { return m.avg; });
-            var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
-            if (minV === maxV) { minV -= 1; maxV += 1; }
-            var n = monthlyAvg.length;
-            var stepX = (W - padL - padR) / (n - 1);
-
-            function xAt(i) { return padL + stepX * i; }
-            function yAt(v) { return padT + (H - padT - padB) * (1 - (v - minV) / (maxV - minV)); }
-
-            var pathD = '', points = '';
-            var prevValid = false;
-            monthlyAvg.forEach(function(m, i) {
-                if (m.avg === null) { prevValid = false; return; }
-                var x = xAt(i), y = yAt(m.avg);
-                pathD += (prevValid ? ' L ' : ' M ') + x + ' ' + y;
-                points += '<circle cx="' + x + '" cy="' + y + '" r="3.2" fill="#004986"></circle>' +
-                          '<text x="' + x + '" y="' + (y - 8) + '" font-size="9.5" text-anchor="middle" fill="#222222" font-weight="700">' + Math.round(m.avg / 10000) + '</text>';
-                prevValid = true;
-            });
-
-            var labels = monthlyAvg.map(function(m, i) {
-                return '<text x="' + xAt(i) + '" y="' + (H - 4) + '" font-size="10" text-anchor="middle" fill="#717171">' + m.label + '</text>';
-            }).join('');
-
-            return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%; height:auto; margin-bottom:18px;">' +
-                '<path d="' + pathD + '" fill="none" stroke="#004986" stroke-width="2"></path>' +
-                points + labels +
-                '</svg>';
-        }
-
-        /* ==========================================================================
-           1. 수도권 전철 전체 노선 역사 데이터 (서울 1~9호선, 인천 1·2호선, 경의중앙선, 경춘선,
-              수인분당선, 공항철도, 우이신설선, 용인경전철, 의정부경전철, 신분당선, 월곶판교선, 위례과천선)
-           ========================================================================== */
-        var transitNetwork = [
+                var transitNetwork = [
 {name:"1호선(경인선)",color:"#0052a4",stations:[{n:"소요산",p:[37.9481,127.061034]},{n:"동두천",p:[37.927878,127.05479]},{n:"보산",p:[37.913702,127.057277]},{n:"동두천중앙",p:[37.901885,127.056482]},{n:"지행",p:[37.892334,127.055716]},{n:"덕정",p:[37.843188,127.061277]},{n:"덕계",p:[37.818486,127.056486]},{n:"양주",p:[37.774381,127.044708]},{n:"녹양",p:[37.75938,127.042292]},{n:"가능",p:[37.748577,127.044213]},{n:"의정부",p:[37.738415,127.045958]},{n:"회룡",p:[37.724846,127.046895]},{n:"망월사",p:[37.709914,127.047455]},{n:"도봉산",p:[37.689313,127.046222]},{n:"도봉",p:[37.679563,127.045595]},{n:"방학",p:[37.667503,127.044273]},{n:"창동",p:[37.653166,127.047731]},{n:"녹천",p:[37.644799,127.051269]},{n:"월계",p:[37.633212,127.058831]},{n:"광운대",p:[37.623632,127.061835]},{n:"석계",p:[37.614805,127.065851]},{n:"신이문",p:[37.601854,127.067325]},{n:"외대앞",p:[37.596073,127.063549]},{n:"회기",p:[37.58946,127.057583]},{n:"청량리",p:[37.580178,127.046835]},{n:"제기동",p:[37.578103,127.034893]},{n:"신설동",p:[37.575297,127.025087]},{n:"동묘앞",p:[37.572627,127.016429]},{n:"동대문",p:[37.57142,127.009745]},{n:"종로5가",p:[37.570926,127.001849]},{n:"종로3가",p:[37.571607,126.991806]},{n:"종각",p:[37.570161,126.982923]},{n:"시청",p:[37.564718,126.977108]},{n:"서울",p:[37.554648,126.972559]},{n:"남영",p:[37.541021,126.9713]},{n:"용산",p:[37.529849,126.964561]},{n:"노량진",p:[37.514219,126.942454]},{n:"대방",p:[37.513342,126.926382]},{n:"신길",p:[37.517122,126.917169]},{n:"영등포",p:[37.515504,126.907628]},{n:"신도림",p:[37.508725,126.891295]},{n:"구로",p:[37.503039,126.881966]},{n:"구일",p:[37.496756,126.870793]},{n:"개봉",p:[37.494594,126.85868]},{n:"오류동",p:[37.494526,126.845365]},{n:"온수",p:[37.492258,126.823388]},{n:"역곡",p:[37.485178,126.811502]},{n:"소사",p:[37.482753,126.79544]},{n:"부천",p:[37.48405,126.782686]},{n:"중동",p:[37.486562,126.764843]},{n:"송내",p:[37.4876,126.753664]},{n:"부개",p:[37.488418,126.74109]},{n:"부평",p:[37.489493,126.724805]},{n:"백운",p:[37.483664,126.707704]},{n:"동암",p:[37.471408,126.702896]},{n:"간석",p:[37.464737,126.694181]},{n:"주안",p:[37.464941,126.679923]},{n:"도화",p:[37.46607,126.668672]},{n:"제물포",p:[37.466769,126.656666]},{n:"도원",p:[37.468446,126.642706]},{n:"동인천",p:[37.475276,126.632802]}]},
 {name:"1호선(경부선)",color:"#0052a4",stations:[{n:"구로",p:[37.503039,126.881966]},{n:"가산디지털단지",p:[37.481072,126.882343]},{n:"독산",p:[37.466613,126.889249]},{n:"금천구청",p:[37.455626,126.89398]},{n:"석수",p:[37.435047,126.902295]},{n:"관악",p:[37.419232,126.908706]},{n:"안양",p:[37.401592,126.922874]},{n:"명학",p:[37.384653,126.935433]},{n:"군포",p:[37.35356,126.948462]},{n:"당정",p:[37.344285,126.948345]},{n:"의왕",p:[37.320852,126.948217]},{n:"성균관대",p:[37.300349,126.97075]},{n:"화서",p:[37.283862,126.989627]},{n:"수원",p:[37.265974,126.999874]},{n:"세류",p:[37.245025,127.013222]},{n:"병점",p:[37.207503,127.032731]},{n:"세마",p:[37.187533,127.04318]},{n:"오산대",p:[37.168953,127.063197]},{n:"오산",p:[37.145885,127.06672]},{n:"진위",p:[37.109447,127.062278]},{n:"송탄",p:[37.075696,127.054301]},{n:"서정리",p:[37.056496,127.052819]},{n:"지제",p:[37.0188,127.070444]},{n:"평택",p:[36.990726,127.085159]},{n:"성환",p:[36.916076,127.126964]},{n:"직산",p:[36.870593,127.143904]},{n:"두정",p:[36.833705,127.14896]},{n:"천안",p:[36.810005,127.146826]},{n:"봉명",p:[36.801215,127.135763]},{n:"쌍용",p:[36.793759,127.1214]},{n:"아산",p:[36.792053,127.104361]},{n:"배방",p:[36.777629,127.052991]},{n:"온양온천",p:[36.780483,127.003249]},{n:"신창",p:[36.769502,126.951108]}]},
 {name:"2호선",color:"#00a84d",stations:[{n:"시청",p:[37.564718,126.977108]},{n:"을지로입구",p:[37.566014,126.982618]},{n:"을지로3가",p:[37.566295,126.99191]},{n:"을지로4가",p:[37.566941,126.998079]},{n:"동대문역사문화공원",p:[37.565138,127.007896]},{n:"신당",p:[37.565972,127.01782]},{n:"상왕십리",p:[37.564354,127.029354]},{n:"왕십리",p:[37.561533,127.037732]},{n:"한양대",p:[37.555273,127.043655]},{n:"뚝섬",p:[37.547184,127.047367]},{n:"성수",p:[37.544581,127.055961]},{n:"건대입구",p:[37.540693,127.07023]},{n:"구의",p:[37.537077,127.085916]},{n:"강변",p:[37.535095,127.094681]},{n:"잠실나루",p:[37.520733,127.10379]},{n:"잠실",p:[37.51395,127.102234]},{n:"잠실새내",p:[37.511687,127.086162]},{n:"종합운동장",p:[37.510997,127.073642]},{n:"삼성",p:[37.508844,127.06316]},{n:"선릉",p:[37.504503,127.049008]},{n:"역삼",p:[37.500622,127.036456]},{n:"강남",p:[37.497175,127.027926]},{n:"교대",p:[37.493415,127.01408]},{n:"서초",p:[37.491897,127.007917]},{n:"방배",p:[37.481426,126.997596]},{n:"사당",p:[37.47653,126.981685]},{n:"낙성대",p:[37.47693,126.963693]},{n:"서울대입구",p:[37.481247,126.952739]},{n:"봉천",p:[37.482362,126.941892]},{n:"신림",p:[37.484201,126.929715]},{n:"신대방",p:[37.487462,126.913149]},{n:"구로디지털단지",p:[37.485266,126.901401]},{n:"대림",p:[37.49297,126.895801]},{n:"신도림",p:[37.508725,126.891295]},{n:"문래",p:[37.517933,126.89476]},{n:"영등포구청",p:[37.52497,126.895951]},{n:"당산",p:[37.53438,126.902281]},{n:"합정",p:[37.549463,126.913739]},{n:"홍대입구",p:[37.557192,126.925381]},{n:"신촌",p:[37.555134,126.936893]},{n:"이대",p:[37.556733,126.946013]},{n:"아현",p:[37.557345,126.956141]},{n:"충정로",p:[37.559973,126.963672]},{n:"시청",p:[37.564718,126.977108]}]},
@@ -1104,6 +606,7 @@
         /* ==========================================================================
            1-1. 최근접 지하철역 도보거리 자동 계산 (Haversine 공식)
            ========================================================================== */
+
         function haversineKm(lat1, lon1, lat2, lon2) {
             var R = 6371;
             var dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1129,10 +632,8 @@
         }
 
         /* ==========================================================================
-           2. 지도 초기화 (안정적인 OSM 타일 서버, 외부 fetch 없음)
+           3. 지도 초기화 (초기 화면: 광화문)
            ========================================================================== */
-
-        // 진단: Leaflet 라이브러리 자체가 로드되지 않았다면(=CDN 차단) 원인을 화면에 표시
         if (typeof L === 'undefined') {
             document.getElementById('map').innerHTML =
                 '<div style="padding:40px; font-size:14px; line-height:1.7; color:#334155; background:#fff;">' +
@@ -1144,36 +645,10 @@
                 '</div>';
         }
 
-        var HOME_LOCATION = { name: "펄어비스 홈 원", center: [37.4064817, 126.9833096] };
+        var GWANGHWAMUN_CENTER = [37.571026, 126.976669]; // 광화문역(5호선) 기준
 
-        // "자산 비교" 탭에서 선택적으로 추가할 수 있는 펄어비스 홈 원(사옥) 참고 데이터
-        var HOME_LAND_ASSET = {
-            type: "LAND", code: "HOME-LAND", name: "펄어비스 홈 원 (토지)",
-            address: "경기도 과천시 858-1", schedule: "-", scheduleYm: null,
-            areaM2: 7014, areaPy: (7014 / 3.3058).toFixed(1),
-            zoning: "-", bcrFar: "-", pricePy: "", totalPrice: "",
-            center: HOME_LOCATION.center, opinion: "펄어비스 사옥 부지 (비교 참고용 데이터)", roadview: ""
-        };
-        var HOME_BUILDING_ASSET = {
-            type: "BUILDING", code: "HOME-BLDG", name: "펄어비스 홈 원 (건물)",
-            address: "경기도 과천시 858-1", dealType: "-",
-            gfaM2: 63113, gfaPy: (63113 / 3.3058).toFixed(1),
-            bareaM2: 0, bareaPy: "-",
-            lareaM2: 7014, lareaPy: (7014 / 3.3058).toFixed(1),
-            floors: "-", completion: "2022년 06월 15일", pricePy: "", totalPrice: "",
-            center: HOME_LOCATION.center, opinion: "펄어비스 사옥 (비교 참고용 데이터)", roadview: ""
-        };
-        var HOME_ASSETS = [HOME_LAND_ASSET, HOME_BUILDING_ASSET];
+        var map = L.map('map').setView(GWANGHWAMUN_CENTER, 15);
 
-        function findAssetByCode(code) {
-            var found = currentDataset.assets.filter(function(a) { return a.code === code; })[0];
-            if (found) return found;
-            return HOME_ASSETS.filter(function(a) { return a.code === code; })[0];
-        }
-
-        var map = L.map('map').setView(HOME_LOCATION.center, 14);
-
-        // 줌 레벨에 따라 마커 크기를 함께 축소/확대 (축소 시 마커 중첩 완화)
         function updateMarkerScale() {
             var z = map.getZoom();
             var scale = Math.max(0.5, Math.min(1.1, (z - 8) / 7));
@@ -1187,7 +662,6 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 진단: 타일 이미지 자체가 차단(방화벽)되는 경우를 감지
         var tileErrorCount = 0;
         tileLayer.on('tileerror', function() {
             tileErrorCount++;
@@ -1199,17 +673,8 @@
             }
         });
 
-        var landLayer = L.layerGroup().addTo(map);
-        var bldgLayer = L.layerGroup().addTo(map);
+        var assetLayer = L.layerGroup().addTo(map);
         var transitLayer = L.layerGroup().addTo(map);
-
-        // 회사 위치 마커 (토지/건물과 완전히 구분되는 전용 마커, 필터의 영향을 받지 않음)
-        var homeIcon = L.divIcon({
-            className: '',
-            html: '<div class="pin-home">🏠 ' + HOME_LOCATION.name + '</div>'
-        });
-        L.marker(HOME_LOCATION.center, { icon: homeIcon, zIndexOffset: 2000 }).addTo(map)
-            .bindTooltip(HOME_LOCATION.name, { direction: 'top', className: 'station-tooltip' });
 
         // 철도망 렌더링
         transitNetwork.forEach(function(route) {
@@ -1226,89 +691,57 @@
         });
 
         /* ==========================================================================
-           3. 상세 사이드바 렌더러 (참고 이미지와 동일 양식)
+           4. 상세 사이드바 렌더러
            ========================================================================== */
-        function renderSidebarDetail(item, skipHistory) {
-            if (!skipHistory) { pushHistory({ type: 'detail', item: item }); } else { currentView = { type: 'detail', item: item }; }
-            var isLand = item.type === "LAND";
-            var html = "";
+        function renderSidebarDetail(item) {
             currentDetailItem = item;
-
             var ns = findNearestStation(item.center);
             var nsText = ns ? (ns.name + '역 (' + ns.line + ') · 도보 약 ' + ns.walkMin + '분 (' + ns.distM.toLocaleString() + 'm)') : '-';
+            var pricePyText = item.pricePerPyeongWon ? (formatNum(item.pricePerPyeongWon) + '원/평') : '-';
 
-            if (isLand) {
-                html =
-                    '<div class="badge-row"><div class="type-badge land">🌱 토지</div>' + compareBtnHtml(item) + '</div>' +
-                    '<h1 class="asset-title">' + (item.name || '-') + '</h1>' +
-                    '<div class="summary-card">' +
-                        '<div><div class="summary-label">예상 토지 평당가</div><div class="summary-val-blue">' + (item.pricePy || '-') + '</div></div>' +
-                        '<div><div class="summary-label">예상 총 공급가</div><div class="summary-val-dark">' + (item.totalPrice || '-') + '</div></div>' +
-                    '</div>' +
-                    '<div class="detail-list">' +
-                        '<div class="detail-item"><div class="detail-label">일련번호</div><div class="detail-val">' + (item.code || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">소재지(지번)</div><div class="detail-val">' + (item.address || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">공급 예정일정</div><div class="detail-val">' + (item.schedule || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.areaM2) + ' ㎡ (' + (item.areaPy || '-') + '평)</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">용도지역/지목</div><div class="detail-val">' + (item.zoning || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">건폐율/용적률/층수</div><div class="detail-val">' + (item.bcrFar || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">네이버 로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener" style="color:#004986; text-decoration:underline;">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
-                    '</div>' +
-                    '<div class="section-subtitle">사업성 및 입지 검토 의견</div>' +
-                    '<div class="opinion-box">' + (item.opinion || '검토 의견 없음') + '</div>';
-            } else {
-                html =
-                    '<div class="badge-row"><div class="type-badge bldg">🏢 건물</div>' + compareBtnHtml(item) + '</div>' +
-                    '<h1 class="asset-title">' + (item.name || '-') + '</h1>' +
-                    '<div class="summary-card">' +
-                        '<div><div class="summary-label">연면적 평당가</div><div class="summary-val-blue">' + (item.pricePy || '-') + '</div></div>' +
-                        '<div><div class="summary-label">총 매매/평가액</div><div class="summary-val-dark">' + (item.totalPrice || '-') + '</div></div>' +
-                    '</div>' +
-                    '<div class="detail-list">' +
-                        '<div class="detail-item"><div class="detail-label">일련번호</div><div class="detail-val">' + (item.code || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">소재지(도로명)</div><div class="detail-val">' + (item.address || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">거래/검토유형</div><div class="detail-val" style="color:#004986;">' + (item.dealType || '일반 매각') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">연면적 (GFA)</div><div class="detail-val">' + formatNum(item.gfaM2) + ' ㎡ (' + (item.gfaPy || '-') + '평)</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">건축면적</div><div class="detail-val">' + formatNum(item.bareaM2) + ' ㎡ (' + (item.bareaPy || '-') + '평)</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.lareaM2) + ' ㎡ (' + (item.lareaPy || '-') + '평)</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">건물 규모/층수</div><div class="detail-val">' + (item.floors || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">준공년월</div><div class="detail-val">' + (item.completion || '-') + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
-                        '<div class="detail-item"><div class="detail-label">네이버 로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener" style="color:#004986; text-decoration:underline;">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
-                    '</div>' +
-                    '<div class="section-subtitle">운용 및 투자 포인트</div>' +
-                    '<div class="opinion-box">' + (item.opinion || '투자 포인트 없음') + '</div>';
-            }
-
-            html += '<button class="compare-btn" id="compare-toggle-analysis-btn" onclick="toggleMarketComparison()">📊 인근 실거래가 비교 분석 <span id="compare-analysis-chevron">▾</span></button>' +
-                    '<div id="compare-result" style="display:none;"></div>';
+            var html =
+                '<div class="badge-row"><div class="type-badge">🏢 상업용 건물</div>' + compareBtnHtml(item) + '</div>' +
+                '<h1 class="asset-title">' + (item.name || '-') + '</h1>' +
+                '<div class="summary-card">' +
+                    '<div><div class="summary-label">연면적평당가</div><div class="summary-val-blue">' + pricePyText + '</div></div>' +
+                    '<div><div class="summary-label">호가</div><div class="summary-val-dark">' + formatWonKr(item.askPriceWon) + '</div></div>' +
+                '</div>' +
+                '<div class="detail-list">' +
+                    '<div class="detail-item"><div class="detail-label">지번</div><div class="detail-val">' + (item.jibun || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">건물명칭</div><div class="detail-val">' + (item.name || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">네이버로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">호가</div><div class="detail-val">' + formatWonKr(item.askPriceWon) + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">건축년도</div><div class="detail-val">' + (item.builtYear || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">층</div><div class="detail-val">' + (item.floors || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">주차</div><div class="detail-val">' + (item.parking || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">용도지역</div><div class="detail-val">' + (item.zoning || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">건물주용도</div><div class="detail-val">' + (item.mainUse || '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">대지면적</div><div class="detail-val">' + formatNum(item.siteAreaM2) + '㎡ (' + item.siteAreaPy + '평)</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">건물연면적</div><div class="detail-val">' + formatNum(item.gfaM2) + '㎡ (' + item.gfaPy + '평)</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">연면적평당가</div><div class="detail-val">' + pricePyText + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">매물링크</div><div class="detail-val">' + (item.listingUrl ? '<a href="' + item.listingUrl + '" target="_blank" rel="noopener">매물 링크 열기 ↗</a>' : '-') + '</div></div>' +
+                    '<div class="detail-item"><div class="detail-label">최근접 지하철역</div><div class="detail-val">' + nsText + '</div></div>' +
+                '</div>';
 
             document.getElementById('sidebar-target').innerHTML = html;
-            updateBackButton();
         }
 
-        // 상단 배지 옆에 붙는 작은 "비교함" 토글 버튼
         function compareBtnHtml(item) {
-            var inCompare = isInCompare(item.code);
-            return '<button class="compare-add-small' + (inCompare ? ' active' : '') + '" onclick="toggleCompare(\'' + item.code + '\'); renderSidebarDetail(currentDetailItem, true);">' +
+            var inCompare = isInCompare(item._uid);
+            return '<button class="compare-add-small' + (inCompare ? ' active' : '') + '" onclick="toggleCompare(' + item._uid + '); renderSidebarDetail(currentDetailItem);">' +
                     (inCompare ? '✓ 비교함' : '비교함+') +
                    '</button>';
         }
 
         /* ==========================================================================
-           4. 자산 마커 렌더링 및 KPI 계산
+           5. 상세 필터 (건물연면적 / 연면적평당가)
            ========================================================================== */
-        /* ==========================================================================
-           4-0. 상세 필터 (부동산 유형 / 면적 / 평당가 / 거래가능상태)
-           ========================================================================== */
-        var advFilter = { type: 'ALL', areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999 };
+        var advFilter = { areaMin: 0, areaMax: 999999999, priceMin: 0, priceMax: 999999999 };
 
-        function getAssetArea(a) { return a.type === 'LAND' ? (a.areaM2 || 0) : (a.gfaM2 || 0); }
-        function getAssetAreaPy(a) { return getAssetArea(a) / 3.3058; }
-        function getAssetPricePyManwon(a) { var w = parsePricePyToWon(a.pricePy); return w ? Math.round(w / 10000) : null; }
+        function getAssetAreaPy(a) { return parseFloat(a.gfaPy) || 0; }
+        function getAssetPricePyManwon(a) { return a.pricePerPyeongWon ? Math.round(a.pricePerPyeongWon / 10000) : null; }
+
         function passesAdvancedFilter(item) {
-            if (advFilter.type !== 'ALL' && item.type !== advFilter.type) return false;
             var area = getAssetAreaPy(item);
             if (area > 0 && (area < advFilter.areaMin || area > advFilter.areaMax)) return false;
             var price = getAssetPricePyManwon(item);
@@ -1369,9 +802,6 @@
             priceMinEl.max = priceMaxEl.max = b.priceMax;
             priceMinEl.value = b.priceMin; priceMaxEl.value = b.priceMax;
 
-            document.getElementById('flt-type').value = 'ALL';
-            advFilter.type = 'ALL';
-
             updateRangeUI('area', '평');
             updateRangeUI('price', '만원');
         }
@@ -1381,82 +811,65 @@
             renderAssets(currentDataset);
         }
 
-        document.getElementById('flt-type').addEventListener('change', function(e) { advFilter.type = e.target.value; renderAssets(currentDataset); });
         bindRangePair('area', '평');
         bindRangePair('price', '만원');
 
+        /* ==========================================================================
+           6. 자산(건물) 데이터 가공 - 평 환산 및 연면적평당가 자동 계산
+           ========================================================================== */
+        function enrichAsset(a, idx) {
+            a._uid = idx;
+            a.siteAreaPy = (a.siteAreaM2 ? (a.siteAreaM2 / 3.3058) : 0).toFixed(1);
+            a.gfaPy = (a.gfaM2 ? (a.gfaM2 / 3.3058) : 0).toFixed(1);
+            var gfaPyNum = parseFloat(a.gfaPy);
+            a.pricePerPyeongWon = (a.askPriceWon && gfaPyNum > 0) ? Math.round(a.askPriceWon / gfaPyNum) : null;
+            return a;
+        }
+
+        function enrichDataset(dataset) {
+            dataset.assets = dataset.assets.map(function(a, idx) { return enrichAsset(a, idx); });
+        }
+
+        /* ==========================================================================
+           7. 마커 렌더링 및 KPI 계산
+           ========================================================================== */
         function renderAssets(dataset) {
-            landLayer.clearLayers();
-            bldgLayer.clearLayers();
+            assetLayer.clearLayers();
 
             dataset.assets.forEach(function(item) {
                 if (!passesAdvancedFilter(item)) { return; }
-
-                var isLand = item.type === "LAND";
-                var pinClass, icon;
-
-                if (isLand) {
-                    icon = "🌱";
-                    pinClass = "pin-land";
-                } else {
-                    icon = "🏢";
-                    pinClass = "pin-bldg";
-                }
+                if (!(isFinite(item.center[0]) && isFinite(item.center[1]))) { return; }
 
                 var marker = L.marker(item.center, {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div class="pin ' + pinClass + '"><span class="pin-label">' + icon + ' ' + item.name + '</span></div>'
+                        html: '<div class="pin pin-bldg"><span class="pin-label">🏢 ' + item.name + '</span></div>'
                     })
                 });
 
                 marker.bindTooltip(item.name, { direction: 'top', offset: [0, -8], className: 'station-tooltip' });
 
                 marker.on('click', function() {
-                    map.flyTo(item.center, 14, { animate: true, duration: 0.7 });
+                    map.flyTo(item.center, 16, { animate: true, duration: 0.7 });
                     renderSidebarDetail(item);
                 });
 
-                marker.addTo(isLand ? landLayer : bldgLayer);
+                marker.addTo(assetLayer);
             });
 
-            // 상단 KPI는 필터와 무관하게 "전체 관리 데이터" 개수를 항상 표시
-            var landAllTotal = dataset.assets.filter(function(a) { return a.type === 'LAND'; }).length;
-            var bldgAllTotal = dataset.assets.filter(function(a) { return a.type === 'BUILDING'; }).length;
-            document.getElementById('kpi-land-status').innerText = landAllTotal;
-            document.getElementById('kpi-bldg-status').innerText = bldgAllTotal;
-            document.getElementById('header-report-date').innerText = dataset.reportDate;
+            document.getElementById('kpi-bldg-status').innerText = dataset.assets.length;
         }
 
         /* ==========================================================================
-           4-1. KPI 박스 클릭 시 자산 목록 표출 (정렬 기준 선택 가능)
+           8. KPI 박스 클릭 시 목록 표출 (정렬 기준 선택 가능)
            ========================================================================== */
-        // "2025년 05월", "2025-05", "2025.05", "2025/05", "202505" 등 다양한 표기를 폭넓게 인식
-        function parseYmFlexible(val) {
-            if (val === null || val === undefined || val === '') return null;
-            var s = String(val).trim();
-            var m = s.match(/(\d{4})\s*[-.\/년]?\s*(\d{1,2})/);
-            if (m) { return parseInt(m[1], 10) * 100 + parseInt(m[2], 10); }
-            return null;
-        }
+        var listSortState = { sort: 'price_asc' };
 
-        function parseScheduleSortKey(schedule) {
-            var ym = parseYmFlexible(schedule);
-            return ym !== null ? ym : Infinity;
-        }
-
-        var listSortState = { type: null, sort: null };
-
-        // 정렬 기준별 비교값 추출 (숫자는 오름/내림차순 뺄셈, 문자열은 localeCompare로 처리)
         function getSortValue(item, key) {
-            if (key === 'schedule') {
-                // 엑셀의 '공급연월(정렬용)' 값이 있으면 그걸 우선 사용, 없으면 자유 텍스트에서 최대한 추출
-                return (item.scheduleYm !== null && item.scheduleYm !== undefined) ? item.scheduleYm : parseScheduleSortKey(item.schedule);
-            }
-            if (key === 'completion') return parseScheduleSortKey(item.completion);
             if (key === 'price') { var p = getAssetPricePyManwon(item); return p === null ? Infinity : p; }
             if (key === 'area') { var a = getAssetAreaPy(item); return a > 0 ? a : Infinity; }
-            if (key === 'code') return item.code || '';
+            if (key === 'built') { return item.builtYear || Infinity; }
+            if (key === 'jibun') { return item.jibun || ''; }
             return 0;
         }
 
@@ -1472,38 +885,23 @@
             });
         }
 
-        function onListSortChange(val, type) {
+        function onListSortChange(val) {
             listSortState.sort = val;
-            renderAssetList(type, true);
+            renderAssetList();
         }
 
-        function renderAssetList(type, skipHistory) {
-            if (!skipHistory) { pushHistory({ type: 'list', assetType: type }); } else { currentView = { type: 'list', assetType: type }; }
-            var isLand = type === "LAND";
-            var list = currentDataset.assets.filter(function(a) { return a.type === type; });
+        function renderAssetList() {
+            var list = currentDataset.assets.slice();
 
-            // 토지: 공급일정/평당가/면적 기준 정렬 제공 · 건물: 평당가/면적/준공년월/일련번호 기준 정렬 제공
-            var sortOptions = isLand ? [
-                { v: 'schedule_asc', l: '공급일정 빠른 순' },
-                { v: 'schedule_desc', l: '공급일정 늦은 순' },
-                { v: 'price_asc', l: '평당가 낮은 순' },
-                { v: 'price_desc', l: '평당가 높은 순' },
-                { v: 'area_asc', l: '면적 작은 순' },
-                { v: 'area_desc', l: '면적 큰 순' }
-            ] : [
-                { v: 'price_asc', l: '평당가 낮은 순' },
-                { v: 'price_desc', l: '평당가 높은 순' },
+            var sortOptions = [
+                { v: 'price_asc', l: '연면적평당가 낮은 순' },
+                { v: 'price_desc', l: '연면적평당가 높은 순' },
                 { v: 'area_asc', l: '연면적 작은 순' },
                 { v: 'area_desc', l: '연면적 큰 순' },
-                { v: 'completion_asc', l: '준공 오래된 순' },
-                { v: 'completion_desc', l: '준공 최신 순' },
-                { v: 'code_asc', l: '일련번호 순' }
+                { v: 'built_asc', l: '건축년도 오래된 순' },
+                { v: 'built_desc', l: '건축년도 최신 순' },
+                { v: 'jibun_asc', l: '지번 순' }
             ];
-
-            if (listSortState.type !== type) {
-                listSortState.type = type;
-                listSortState.sort = isLand ? 'schedule_asc' : 'code_asc';
-            }
 
             applyListSort(list, listSortState.sort);
 
@@ -1511,51 +909,81 @@
                 return '<option value="' + o.v + '"' + (o.v === listSortState.sort ? ' selected' : '') + '>' + o.l + '</option>';
             }).join('');
 
-            var html = '<div class="list-header">' + (isLand ? '🌱 토지' : '🏢 건물') + ' 목록</div>' +
+            var html = '<div class="list-header">🏢 매물 목록</div>' +
                         '<div class="list-subheader-row">' +
                             '<div class="list-subheader">' + list.length + '건</div>' +
-                            '<select class="list-sort-select" onchange="onListSortChange(this.value, \'' + type + '\')">' + optionsHtml + '</select>' +
+                            '<select class="list-sort-select" onchange="onListSortChange(this.value)">' + optionsHtml + '</select>' +
                         '</div>';
 
             if (list.length === 0) {
                 html += '<div class="empty-side" style="margin-top:60px;"><div class="icon">📭</div>데이터가 없습니다.</div>';
             } else {
                 list.forEach(function(item) {
-                    var cmp = isInCompare(item.code);
-                    html += '<div class="asset-list-item" data-code="' + item.code + '">' +
-                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); renderAssetList(\'' + type + '\', true);">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
+                    var cmp = isInCompare(item._uid);
+                    html += '<div class="asset-list-item" data-uid="' + item._uid + '">' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(' + item._uid + '); updateCompareBadge(); renderAssetList();">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
                         '<div class="row-name">' + item.name + '</div>' +
-                        '<div class="row-meta">' +
-                        (isLand
-                            ? '일련번호 ' + item.code + ' · <span class="row-schedule">' + (item.schedule || '-') + '</span>'
-                            : '일련번호 ' + item.code) +
-                        '<br>' + item.address +
+                        '<div class="row-meta">' + item.jibun + '<br>' +
+                        (item.pricePerPyeongWon ? (formatNum(item.pricePerPyeongWon) + '원/평') : '-') +
                         '</div></div>';
                 });
             }
 
             document.getElementById('sidebar-target').innerHTML = html;
-            updateBackButton();
 
             var rows = document.querySelectorAll('.asset-list-item');
             rows.forEach(function(row, i) {
                 row.addEventListener('click', function() {
                     var item = list[i];
-                    map.flyTo(item.center, 14, { animate: true, duration: 0.7 });
+                    map.flyTo(item.center, 16, { animate: true, duration: 0.7 });
                     renderSidebarDetail(item);
                 });
             });
         }
 
-        document.getElementById('kpi-box-land').addEventListener('click', function() { renderAssetList('LAND'); });
-        document.getElementById('kpi-box-bldg').addEventListener('click', function() { renderAssetList('BUILDING'); });
+        document.getElementById('kpi-box-bldg').addEventListener('click', function() { renderAssetList(); });
 
         /* ==========================================================================
-           4-2. 검색 기능 (지역명 / 자산명 키워드)
+           9. 검색 기능 (지번 / 건물명칭)
            ========================================================================== */
-        /* ==========================================================================
-           4-3. 상단 필터 드롭다운 토글
-           ========================================================================== */
+        function runSearch() {
+            var q = document.getElementById('search-input').value.trim();
+            if (!q) return;
+
+            var list = currentDataset.assets.filter(function(a) {
+                return (a.name && a.name.indexOf(q) !== -1) || (a.jibun && a.jibun.indexOf(q) !== -1);
+            });
+
+            var html = '<div class="list-header">🔎 "' + q + '" 검색 결과</div>' +
+                        '<div class="list-subheader">' + list.length + '건</div>';
+
+            if (list.length === 0) {
+                html += '<div class="empty-side" style="margin-top:60px;"><div class="icon">🔍</div>검색 결과가 없습니다.<br>지번 또는 건물명칭으로 다시 검색해 보세요.</div>';
+            } else {
+                list.forEach(function(item) {
+                    var cmp = isInCompare(item._uid);
+                    html += '<div class="asset-list-item">' +
+                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(' + item._uid + '); updateCompareBadge(); runSearch();">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
+                        '<div class="row-name">🏢 ' + item.name + '</div>' +
+                        '<div class="row-meta">' + item.jibun + '</div></div>';
+                });
+            }
+
+            document.getElementById('sidebar-target').innerHTML = html;
+            var rows = document.querySelectorAll('.asset-list-item');
+            rows.forEach(function(row, i) {
+                row.addEventListener('click', function() {
+                    var item = list[i];
+                    map.flyTo(item.center, 16, { animate: true, duration: 0.7 });
+                    renderSidebarDetail(item);
+                });
+            });
+        }
+
+        document.getElementById('search-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { runSearch(); }
+        });
+
         function toggleFilterPanel() {
             document.getElementById('filter-panel').classList.toggle('open');
         }
@@ -1567,54 +995,10 @@
             }
         });
 
-        function runSearch(presetQuery, skipHistory) {
-            var q = (presetQuery !== undefined && presetQuery !== null) ? presetQuery : document.getElementById('search-input').value.trim();
-            if (!q) return;
-            document.getElementById('search-input').value = q;
-
-            if (!skipHistory) { pushHistory({ type: 'search', query: q }); } else { currentView = { type: 'search', query: q }; }
-
-            var list = currentDataset.assets.filter(function(a) {
-                return (a.name && a.name.indexOf(q) !== -1) || (a.address && a.address.indexOf(q) !== -1);
-            });
-
-            var html = '<div class="list-header">🔎 "' + q + '" 검색 결과</div>' +
-                        '<div class="list-subheader">' + list.length + '건</div>';
-
-            if (list.length === 0) {
-                html += '<div class="empty-side" style="margin-top:60px;"><div class="icon">🔍</div>검색 결과가 없습니다.<br>지역명 또는 자산명으로 다시 검색해 보세요.</div>';
-            } else {
-                list.forEach(function(item) {
-                    var isLand = item.type === "LAND";
-                    var cmp = isInCompare(item.code);
-                    html += '<div class="asset-list-item">' +
-                        '<button class="row-compare-btn' + (cmp ? ' active' : '') + '" onclick="event.stopPropagation(); toggleCompare(\'' + item.code + '\'); updateCompareBadge(); runSearch(undefined, true);">' + (cmp ? '✓ 비교' : '+ 비교') + '</button>' +
-                        '<div class="row-name">' + (isLand ? '🌱' : '🏢') + ' ' + item.name + '</div>' +
-                        '<div class="row-meta">일련번호 ' + item.code + '<br>' + item.address + '</div></div>';
-                });
-            }
-
-            document.getElementById('sidebar-target').innerHTML = html;
-            updateBackButton();
-            var rows = document.querySelectorAll('.asset-list-item');
-            rows.forEach(function(row, i) {
-                row.addEventListener('click', function() {
-                    var item = list[i];
-                    map.flyTo(item.center, 14, { animate: true, duration: 0.7 });
-                    renderSidebarDetail(item);
-                });
-            });
-        }
-
-        document.getElementById('search-input').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { runSearch(); }
-        });
-
-        // 필터 체크박스 연동 (자산 구분 / 지도 레이어 각각 독립 동작)
         document.getElementById('chk-transit').onchange = function(e) { e.target.checked ? map.addLayer(transitLayer) : map.removeLayer(transitLayer); };
 
         /* ==========================================================================
-           5. 엑셀 업로드 / 다운로드 / HTML 저장
+           10. 엑셀 업로드 / 다운로드 / HTML 저장
            ========================================================================== */
         document.getElementById('excel-file').addEventListener('change', function(e) {
             if (typeof XLSX === 'undefined') {
@@ -1636,68 +1020,41 @@
                 }
 
                 currentDataset.assets = rows.map(function(r) {
-                    var isL = r['구분'] === '토지';
-                    if (isL) {
-                        var areaM2 = parseFloat(r['대지면적_㎡'] || 0);
-                        return {
-                            type: 'LAND',
-                            code: r['일련번호'] || '-',
-                            name: r['자산명'] || '미명명 토지',
-                            address: r['소재지'] || '-',
-                            schedule: r['공급예정일정'] || '-',
-                            scheduleYm: parseYmFlexible(r['공급연월(정렬용)']),
-                            areaM2: areaM2,
-                            areaPy: (areaM2 / 3.3058).toFixed(1),
-                            zoning: r['용도지역_지목'] || '-',
-                            bcrFar: r['건폐율_용적률_층수'] || '-',
-                            pricePy: r['평당가'] || '-',
-                            totalPrice: r['총금액'] || '-',
-                            center: parseLatLng(r['위도,경도']),
-                            opinion: r['검토의견'] || '-',
-                            roadview: r['네이버로드뷰'] || ''
-                        };
-                    } else {
-                        var gfaM2 = parseFloat(r['연면적_㎡'] || 0);
-                        var bareaM2 = parseFloat(r['건축면적_㎡'] || 0);
-                        var lareaM2 = parseFloat(r['대지면적_㎡'] || 0);
-                        return {
-                            type: 'BUILDING',
-                            code: r['일련번호'] || '-',
-                            name: r['자산명'] || '미명명 건물',
-                            address: r['소재지'] || '-',
-                            dealType: r['거래_검토유형'] || '-',
-                            gfaM2: gfaM2,
-                            gfaPy: (gfaM2 / 3.3058).toFixed(1),
-                            bareaM2: bareaM2,
-                            bareaPy: (bareaM2 / 3.3058).toFixed(1),
-                            lareaM2: lareaM2,
-                            lareaPy: (lareaM2 / 3.3058).toFixed(1),
-                            floors: r['규모_층수'] || '-',
-                            completion: r['준공년월'] || '-',
-                            pricePy: r['평당가'] || '-',
-                            totalPrice: r['총금액'] || '-',
-                            center: parseLatLng(r['위도,경도']),
-                            opinion: r['검토의견'] || '-',
-                            roadview: r['네이버로드뷰'] || ''
-                        };
-                    }
+                    var askPriceEok = parseFloat(r['호가(억원)'] !== undefined ? r['호가(억원)'] : r['호가']) || 0;
+                    return {
+                        jibun: r['지번'] || '-',
+                        name: r['건물명칭'] || '미명명 건물',
+                        roadview: r['네이버로드뷰'] || '',
+                        askPriceWon: Math.round(askPriceEok * 100000000),
+                        builtYear: r['건축년도'] || '-',
+                        floors: r['층'] || '-',
+                        parking: r['주차'] || '-',
+                        zoning: r['용도지역'] || '-',
+                        mainUse: r['건물주용도'] || '-',
+                        siteAreaM2: parseFloat(r['대지면적(㎡)'] || 0),
+                        gfaM2: parseFloat(r['건물연면적(㎡)'] || 0),
+                        listingUrl: r['매물링크'] || '',
+                        center: parseLatLng(r['위도,경도'])
+                    };
                 });
-                // 기준일: 엑셀 최상단(첫 번째) 행의 '기준일' 값만 확인, 없으면 오늘 날짜를 기본값으로 사용
-                var topRowRefDate = rows[0] ? rows[0]['기준일'] : null;
-                var uploadedRefDate = topRowRefDate ? ((topRowRefDate instanceof Date) ? topRowRefDate.toISOString().slice(0, 10) : String(topRowRefDate)) : null;
-                currentDataset.reportDate = uploadedRefDate ? (uploadedRefDate + " 기준") : todayReportDate();
 
-                // 위도,경도는 엑셀에 입력된 값을 그대로 사용합니다 (자동 좌표 변환 없음)
+                enrichDataset(currentDataset);
+
+                var overLimit = currentDataset.assets.filter(function(a) { return a.askPriceWon >= 100000000000; })
+                    .map(function(a) { return a.name + ' (' + formatWonKr(a.askPriceWon) + ')'; });
+
                 var invalidRows = currentDataset.assets.filter(function(a) {
                     return !(isFinite(a.center[0]) && isFinite(a.center[1]));
-                }).map(function(a) { return a.name + ' (' + a.address + ')'; });
+                }).map(function(a) { return a.name + ' (' + a.jibun + ')'; });
 
-                renderAssets(currentDataset);
-                initAdvancedFilterUI(); // 새 데이터 기준으로 필터 슬라이더 범위 재설정
+                initAdvancedFilterUI();
                 renderAssets(currentDataset);
                 if (currentDataset.assets.length > 0) { renderSidebarDetail(currentDataset.assets[0]); }
 
                 var msg = '엑셀 데이터 ' + rows.length + '건을 지도에 반영했습니다.';
+                if (overLimit.length > 0) {
+                    msg += '\n\n※ 본 리포트는 1,000억원 미만 건물 대상입니다. 다음 ' + overLimit.length + '건은 호가가 1,000억원을 초과합니다:\n- ' + overLimit.join('\n- ');
+                }
                 if (invalidRows.length > 0) {
                     msg += '\n\n다음 ' + invalidRows.length + '건은 "위도,경도" 값이 비어있거나 형식이 올바르지 않아 지도에 표시되지 않습니다:\n- ' + invalidRows.join('\n- ') + '\n\n카카오맵/구글맵에서 해당 위치를 우클릭해 나온 좌표를 "위도, 경도" 형식으로 한 칸에 입력해 주세요.';
                 }
@@ -1718,33 +1075,40 @@
 
         function downloadSampleExcel() {
             var sample = [
-                { "구분": "토지", "일련번호": "LND-2025-01", "자산명": "판교 제2테크노밸리 상업·업무 A1", "소재지": "경기도 성남시 분당구 삼평동 642", "공급예정일정": "2025년 05월 공급공고 (D-40)", "공급연월(정렬용)": "2025-05", "대지면적_㎡": 3850, "용도지역_지목": "일반상업지역 / 업무시설용지", "건폐율_용적률_층수": "건폐율 60% / 용적률 400%", "평당가": "4,800만 원/평", "총금액": "약 559억 원", "위도,경도": "37.4093, 127.1001", "검토의견": "신분당선 판교역 인근 및 월곶판교선 수혜.", "네이버로드뷰": "https://map.naver.com/p/...", "기준일": "2025-05-01" },
-                { "구분": "건물", "일련번호": "BLD-2025-03", "자산명": "인덕원 스테이션 타워", "소재지": "경기도 안양시 동안구 관양동 1488", "거래_검토유형": "통매각 / 밸류애드 검토", "연면적_㎡": 9800, "건축면적_㎡": 680, "대지면적_㎡": 950, "규모_층수": "지하 2층 / 지상 8층", "준공년월": "2014년 11월", "평당가": "1,950만 원/평 (연면적 기준)", "총금액": "578억 원", "위도,경도": "37.4014, 126.9768", "검토의견": "4호선 및 월곶판교선 환승 예정 인덕원역 초인접.", "네이버로드뷰": "https://map.naver.com/p/..." }
+                { "지번": "서울특별시 종로구 세종로 149", "건물명칭": "광화문 센트럴 오피스타워", "네이버로드뷰": "https://map.naver.com/p/...", "호가(억원)": 920, "건축년도": 2011, "층": "지하 4층 / 지상 15층", "주차": "118대", "용도지역": "일반상업지역", "건물주용도": "업무시설", "대지면적(㎡)": 1480, "건물연면적(㎡)": 16200, "매물링크": "https://...", "위도,경도": "37.5726, 126.9770" },
+                { "지번": "서울특별시 중구 다동 1", "건물명칭": "다동 비즈니스센터", "네이버로드뷰": "https://map.naver.com/p/...", "호가(억원)": 315, "건축년도": 2015, "층": "지하 2층 / 지상 10층", "주차": "28대", "용도지역": "중심상업지역", "건물주용도": "업무시설", "대지면적(㎡)": 410, "건물연면적(㎡)": 3680, "매물링크": "https://...", "위도,경도": "37.5675, 126.9803" }
             ];
             var ws = XLSX.utils.json_to_sheet(sample);
             var wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "자산데이터");
-            XLSX.writeFile(wb, "부동산_자산관리_양식.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "건물데이터");
+            XLSX.writeFile(wb, "서울4대문_상업용부동산_양식.xlsx");
         }
 
         function saveStandaloneHTML() {
             var fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-            var updated = '<script id="dataset-script">\n        var currentDataset = ' + JSON.stringify(currentDataset, null, 4) + ';\n    <\/script>';
+            var exportAssets = currentDataset.assets.map(function(a) {
+                var copy = {};
+                for (var k in a) { if (k !== '_uid' && k !== 'siteAreaPy' && k !== 'gfaPy' && k !== 'pricePerPyeongWon') copy[k] = a[k]; }
+                return copy;
+            });
+            var updated = '<script id="dataset-script">\n        var currentDataset = ' + JSON.stringify({ assets: exportAssets }, null, 4) + ';\n    <\/script>';
             fullHtml = fullHtml.replace(/<script id="dataset-script">[\s\S]*?<\/script>/, updated);
 
             var blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
             var a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = '부동산_자산관리_대시보드_' + new Date().toISOString().slice(0,10) + '.html';
+            a.download = '서울4대문_상업용부동산_대시보드_' + new Date().toISOString().slice(0,10) + '.html';
             a.click();
         }
 
-        // 초기 실행 (기준일이 지정되지 않았다면 오늘 날짜를 기본값으로 사용)
-        if (!currentDataset.reportDate) { currentDataset.reportDate = todayReportDate(); }
+        /* ==========================================================================
+           11. 초기 실행
+           ========================================================================== */
+        enrichDataset(currentDataset);
         initAdvancedFilterUI();
         renderAssets(currentDataset);
-        // 최초 접속 시에는 특정 자산이 아니라 안내 메시지를 표시
-        showWelcome();
+        document.getElementById('sidebar-target').innerHTML =
+            '<div class="sidebar-welcome"><div class="icon">📌</div>지도 위의 마커를 클릭하시거나 검색을 통해<br>건물 상세 정보를 확인할 수 있습니다.</div>';
 
         setTimeout(function() { map.invalidateSize(); }, 150);
         window.addEventListener('resize', function() { map.invalidateSize(); });
