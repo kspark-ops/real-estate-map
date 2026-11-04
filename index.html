@@ -1575,13 +1575,13 @@
 
         // 연면적평당가(원/평)를 "1,877만원/평" 형태(만원 단위, 천 단위 콤마)로 표시
         function formatPricePy(won) {
-            if (won === null || won === undefined || isNaN(won)) return '-';
+            if (won === null || won === undefined || isNaN(won) || Number(won) <= 0) return 'TBD';
             return Math.round(won / 10000).toLocaleString() + '만원/평';
         }
 
         // 원 단위 금액을 "OOO억 OOOO만원" 형태의 한국식 표기로 변환
         function formatWonKr(won) {
-            if (won === null || won === undefined || isNaN(won)) return '-';
+            if (won === null || won === undefined || isNaN(won) || Number(won) <= 0) return 'TBD';
             won = Math.round(won);
             var eok = Math.floor(won / 100000000);
             var rest = won % 100000000;
@@ -2298,7 +2298,10 @@
                 }
 
                 currentDataset.assets = rows.map(function(r) {
-                    var askPriceEok = parseFloat(r['호가(억원)'] !== undefined ? r['호가(억원)'] : r['호가']) || 0;
+                    // 호가: 숫자만 인정. 0, 빈칸, 문자(협의 등)는 0으로 저장되어 화면에 TBD로 표시됨
+                    var askRaw = r['호가(억원)'] !== undefined ? r['호가(억원)'] : r['호가'];
+                    var askPriceEok = Number(String(askRaw === undefined || askRaw === null ? '' : askRaw).replace(/,/g, '').trim());
+                    if (!isFinite(askPriceEok) || askPriceEok <= 0) askPriceEok = 0;
                     return {
                         jibun: r['지번'] || '-',
                         name: r['건물명칭'] || '미명명 건물',
