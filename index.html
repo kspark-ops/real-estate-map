@@ -2291,11 +2291,11 @@
         }
         var BASEMAPS = {
             osm:        { label: 'OpenStreetMap 기본', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', host: 'tile.openstreetmap.org', opt: { maxZoom: 19, attribution: '© OpenStreetMap' } },
-            positron:   { label: 'CARTO Positron (밝은 회색·아이콘 없음)', url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, attribution: CARTO_ATTR } },
-            positronNL: { label: 'CARTO Positron · 지명 없음', url: 'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, attribution: CARTO_ATTR } },
-            voyager:    { label: 'CARTO Voyager (OSM 느낌·아이콘 적음)', url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, attribution: CARTO_ATTR } },
-            voyagerNL:  { label: 'CARTO Voyager · 지명 없음', url: 'https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, attribution: CARTO_ATTR } },
-            dark:       { label: 'CARTO Dark Matter (어두운 배경)', url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, attribution: CARTO_ATTR } },
+            positron:   { label: 'CARTO Positron (밝은 회색·아이콘 없음)', url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, maxNativeZoom: 18, attribution: CARTO_ATTR } },
+            positronNL: { label: 'CARTO Positron · 지명 없음', url: 'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, maxNativeZoom: 18, attribution: CARTO_ATTR } },
+            voyager:    { label: 'CARTO Voyager (OSM 느낌·아이콘 적음)', url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, maxNativeZoom: 18, attribution: CARTO_ATTR } },
+            voyagerNL:  { label: 'CARTO Voyager · 지명 없음', url: 'https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, maxNativeZoom: 18, attribution: CARTO_ATTR } },
+            dark:       { label: 'CARTO Dark Matter (어두운 배경)', url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', host: 'basemaps.cartocdn.com', carto: true, opt: { maxZoom: 19, maxNativeZoom: 18, attribution: CARTO_ATTR } },
             topo:       { label: 'OpenTopoMap (지형·등고선)', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', host: 'tile.opentopomap.org', opt: { maxZoom: 19, maxNativeZoom: 17, subdomains: 'abc', attribution: '© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)' } }
         };
         var tileLayer = null, tileErrorCount = 0, tileWarnEl = null, currentBaseKey = 'osm';
@@ -2311,11 +2311,13 @@
             if (sel0) sel0.value = key;
             if (tileLayer) { map.removeLayer(tileLayer); }
             if (tileWarnEl && tileWarnEl.parentNode) { tileWarnEl.parentNode.removeChild(tileWarnEl); }
-            tileWarnEl = null; tileErrorCount = 0;
+            tileWarnEl = null; tileErrorCount = 0; var tileLoadCount = 0;
             tileLayer = L.tileLayer(def.carto ? (def.url + '?key=' + encodeURIComponent(getCartoKey())) : def.url, def.opt).addTo(map);
+            tileLayer.on('tileload', function() { tileLoadCount++; });
             tileLayer.on('tileerror', function() {
                 tileErrorCount++;
-                if (tileErrorCount === 1) {
+                // 타일이 한 장도 불러와지지 않고 연속 실패할 때만(=서버 접속 차단) 안내 표시. 일부 타일 누락은 무시
+                if (tileErrorCount >= 4 && tileLoadCount === 0 && !tileWarnEl) {
                     var warn = document.createElement('div');
                     warn.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:20px 26px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:2000; font-size:13px; color:#334155; max-width:360px; text-align:center;';
                     warn.innerHTML = '<b style="color:#dc2626;">⚠ 지도 타일 이미지 로딩 실패</b><br><br>Leaflet은 정상 로드되었으나, 지도 배경 이미지 서버(' + def.host + ') 접속이 네트워크에서 차단된 것으로 보입니다.<br><br>사내망 방화벽 설정을 확인하시거나, 일반 인터넷 환경에서 다시 열어보거나, 필터의 "배경지도"에서 다른 지도를 선택해 보세요.';
