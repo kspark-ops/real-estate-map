@@ -205,10 +205,10 @@
         .comment-text { font-size: 14px; font-weight: 600; line-height: 1.6; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
         .comment-text.empty { color: var(--muted); font-weight: 500; }
         /* 상권 권역 동심원: 매물 마커보다 눈에 덜 띄게 */
-        .district-label { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; font-size: 11px; font-weight: 800; color: #6b5fa0; opacity: 0.8; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; display: none; }
+        .district-label { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; font-size: 11px; font-weight: 800; color: #a61e4d; opacity: 0.9; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; display: none; }
         #map.show-district-labels .district-label { display: block; }
-        .district-tip { background: #fff !important; color: var(--ink) !important; border: 1px solid #d9d4ea !important; border-radius: 10px !important; box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important; padding: 10px 12px !important; width: 250px; white-space: normal !important; }
-        .district-tip .dt-name { font-size: 13px; font-weight: 800; color: #5b4d99; margin-bottom: 6px; }
+        .district-tip { background: #fff !important; color: var(--ink) !important; border: 1px solid #f3c4d6 !important; border-radius: 10px !important; box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important; padding: 10px 12px !important; width: 250px; white-space: normal !important; }
+        .district-tip .dt-name { font-size: 13px; font-weight: 800; color: #a61e4d; margin-bottom: 6px; }
         .district-tip .dt-key { font-size: 10.5px; font-weight: 800; color: var(--muted); margin-top: 5px; }
         .district-tip .dt-txt { font-size: 12px; font-weight: 500; line-height: 1.5; }
         .summary-sub { margin-top: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
@@ -2331,12 +2331,12 @@
             var tip = '<div class="dt-name">' + d.name + '</div>' +
                       '<div class="dt-key">상권 성격</div><div class="dt-txt">' + d.kind + '</div>' +
                       '<div class="dt-key">거리의 분위기</div><div class="dt-txt">' + d.mood + '</div>';
-            var outer = L.circle(d.c, { pane: 'districtPane', radius: d.r[1], color: '#8c7fb8', weight: 1, opacity: 0.55, dashArray: '4 4', fillColor: '#8c7fb8', fillOpacity: 0.04 });
-            var inner = L.circle(d.c, { pane: 'districtPane', radius: d.r[0], color: '#8c7fb8', weight: 1, opacity: 0.6, fillColor: '#8c7fb8', fillOpacity: 0.08 });
+            var outer = L.circle(d.c, { pane: 'districtPane', radius: d.r[1], color: '#d6336c', weight: 2, opacity: 0.8, dashArray: '6 5', fillColor: '#d6336c', fillOpacity: 0.05 });
+            var inner = L.circle(d.c, { pane: 'districtPane', radius: d.r[0], color: '#d6336c', weight: 2, opacity: 0.85, fillColor: '#d6336c', fillOpacity: 0.11 });
             [outer, inner].forEach(function(ci) {
                 ci.bindTooltip(tip, { sticky: true, direction: 'top', className: 'district-tip', opacity: 1 });
-                ci.on('mouseover', function() { inner.setStyle({ fillOpacity: 0.16 }); outer.setStyle({ fillOpacity: 0.08 }); });
-                ci.on('mouseout', function() { inner.setStyle({ fillOpacity: 0.08 }); outer.setStyle({ fillOpacity: 0.04 }); });
+                ci.on('mouseover', function() { inner.setStyle({ fillOpacity: 0.2 }); outer.setStyle({ fillOpacity: 0.1 }); });
+                ci.on('mouseout', function() { inner.setStyle({ fillOpacity: 0.11 }); outer.setStyle({ fillOpacity: 0.05 }); });
                 ci.addTo(districtLayer);
             });
             L.marker(d.c, { pane: 'districtPane', interactive: false, keyboard: false,
