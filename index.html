@@ -200,6 +200,17 @@
         .summary-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
         .summary-val-blue { font-size: 18px; font-weight: 800; color: var(--brand); }
         .summary-val-dark { font-size: 18px; font-weight: 800; color: var(--ink); }
+        .comment-box { margin: 0 0 18px; padding: 14px 16px 15px; background: #fff8e6; border: 1px solid #f3dfa2; border-left: 5px solid #f2a900; border-radius: 12px; }
+        .comment-title { font-size: 12px; font-weight: 800; color: #9a6700; margin-bottom: 7px; letter-spacing: 0.2px; }
+        .comment-text { font-size: 14px; font-weight: 600; line-height: 1.6; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+        .comment-text.empty { color: var(--muted); font-weight: 500; }
+        /* 상권 권역 동심원: 매물 마커보다 눈에 덜 띄게 */
+        .district-label { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; font-size: 11px; font-weight: 800; color: #6b5fa0; opacity: 0.8; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; display: none; }
+        #map.show-district-labels .district-label { display: block; }
+        .district-tip { background: #fff !important; color: var(--ink) !important; border: 1px solid #d9d4ea !important; border-radius: 10px !important; box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important; padding: 10px 12px !important; width: 250px; white-space: normal !important; }
+        .district-tip .dt-name { font-size: 13px; font-weight: 800; color: #5b4d99; margin-bottom: 6px; }
+        .district-tip .dt-key { font-size: 10.5px; font-weight: 800; color: var(--muted); margin-top: 5px; }
+        .district-tip .dt-txt { font-size: 12px; font-weight: 500; line-height: 1.5; }
         .summary-sub { margin-top: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
         .summary-sub b { font-size: 13.5px; font-weight: 800; color: var(--ink); margin-left: 4px; }
         .detail-val.multiline { white-space: pre-wrap; word-break: break-word; }
@@ -441,6 +452,7 @@
                         <div class="filter-group">
                             <div class="filter-group-title">지도 레이어</div>
                             <label class="toggle-item"><input type="checkbox" id="chk-transit" checked="">지하철 노선</label>
+                            <label class="toggle-item"><input type="checkbox" id="chk-district" checked="">상권 권역 (동심원)</label>
                         </div>
                         <button class="filter-reset-btn" onclick="resetAdvancedFilters()">필터 초기화</button>
                     </div>
@@ -2273,6 +2285,67 @@
         var assetLayer = L.layerGroup().addTo(map);
         var transitLayer = L.layerGroup().addTo(map);
 
+        /* 상권 권역: 중심점 기준 동심원(안쪽=반경 하한, 바깥쪽=반경 상한). 노선·마커보다 아래 pane에 얇고 옅게 표시 */
+        map.createPane('districtPane');
+        map.getPane('districtPane').style.zIndex = 350;
+        var districtLayer = L.layerGroup().addTo(map);
+        var DISTRICTS = [
+            { name: '광화문·세종대로', c: [37.5716228232824, 126.976787992565], r: [500, 600],
+              kind: '관공서·대기업·문화시설 중심. 평일 점심과 업무 수요가 큼',
+              mood: '넓고 정돈된 도심. 직장인 흐름이 빠르고, 광장 주변은 행사·관광객에 따라 분위기가 달라짐' },
+            { name: '청진·종각·종로', c: [37.5709617749066, 126.981437983842], r: [400, 500],
+              kind: '오피스 식음료와 저녁 모임·회식 수요',
+              mood: '대로변은 분주하고, 골목에는 식당과 오래된 건물의 생활감이 남아 있음' },
+            { name: '인사동', c: [37.5739180680984, 126.984863287559], r: [300, 400],
+              kind: '전통 공예·갤러리·찻집·기념품 등 문화·관광형',
+              mood: '큰길은 천천히 둘러보는 관광 거리, 안쪽 골목은 화랑·공예점·찻집을 찾아 걷는 분위기' },
+            { name: '시청·서소문·정동', c: [37.56472, 126.97694], r: [500, 600],
+              kind: '관공서·금융·오피스 수요와 역사·문화 방문 수요가 공존',
+              mood: '시청 주변은 바쁘고 단정한 도심 분위기, 정동길은 돌담과 근대 건축물이 이어지는 차분한 산책 분위기' },
+            { name: '무교동·다동·을지로입구', c: [37.56611, 126.9825], r: [400, 500],
+              kind: '금융·대기업 오피스와 직장인 점심 수요 중심',
+              mood: '빌딩과 보도가 이어지는 업무지구 분위기. 골목 안에는 오래된 도심 식당가의 결이 남아 있음' },
+            { name: '명동', c: [37.5634472823811, 126.986732853198], r: [500, 600],
+              kind: '관광·쇼핑 중심의 목적 방문형 상권',
+              mood: '간판·매장·길거리 먹거리와 관광객이 밀집한 밝고 활기찬 보행 거리' },
+            { name: '을지로2~3가', c: [37.5662750350156, 126.992650024369], r: [400, 500],
+              kind: '오피스 점심, 저녁 회식, 골목 식당·카페·주점이 공존',
+              mood: '큰길은 업무지구답게 바쁘고, 골목은 투박하고 밀도 높음. 저녁에는 식당·술집 골목에 활기가 모임' },
+            { name: '을지로4~5가·충무로 북부', c: [37.5666369941572, 126.997852780281], r: [500, 600],
+              kind: '제조·도매·시장 기능과 식음료 상권이 공존',
+              mood: '작업장·도매점·시장 풍경이 섞인 실용적이고 현장감 있는 거리' },
+            { name: '남대문·회현', c: [37.5591863609004, 126.977653709273], r: [400, 500],
+              kind: '전통시장·도매·관광객 중심',
+              mood: '좁은 골목과 점포, 좌판, 시장 손님이 어우러진 활기차고 북적이는 시장 거리' },
+            { name: '익선동', c: [37.5733907062616, 126.990919055365], r: [200, 300],
+              kind: '한옥 골목의 카페·음식점·체험형 방문 수요',
+              mood: '좁은 한옥 골목에 가게가 촘촘히 들어선 활기찬 골목형 거리' },
+            { name: '서촌', c: [37.58075, 126.97010], r: [400, 500],
+              kind: '골목형 음식점·카페와 한옥·문화 공간 중심의 방문형 상권',
+              mood: '오래된 상점과 한옥, 새 카페·음식점이 어우러진 소박하고 정겨운 골목 분위기' },
+            { name: '북촌', c: [37.58177, 126.98481], r: [400, 500],
+              kind: '한옥·문화 공간과 관광·목적 방문 수요 중심',
+              mood: '한옥이 이어지는 골목과 생활 주거지가 어우러져 차분하고 고즈넉한 분위기' }
+        ];
+        DISTRICTS.forEach(function(d) {
+            var tip = '<div class="dt-name">' + d.name + '</div>' +
+                      '<div class="dt-key">상권 성격</div><div class="dt-txt">' + d.kind + '</div>' +
+                      '<div class="dt-key">거리의 분위기</div><div class="dt-txt">' + d.mood + '</div>';
+            var outer = L.circle(d.c, { pane: 'districtPane', radius: d.r[1], color: '#8c7fb8', weight: 1, opacity: 0.55, dashArray: '4 4', fillColor: '#8c7fb8', fillOpacity: 0.04 });
+            var inner = L.circle(d.c, { pane: 'districtPane', radius: d.r[0], color: '#8c7fb8', weight: 1, opacity: 0.6, fillColor: '#8c7fb8', fillOpacity: 0.08 });
+            [outer, inner].forEach(function(ci) {
+                ci.bindTooltip(tip, { sticky: true, direction: 'top', className: 'district-tip', opacity: 1 });
+                ci.on('mouseover', function() { inner.setStyle({ fillOpacity: 0.16 }); outer.setStyle({ fillOpacity: 0.08 }); });
+                ci.on('mouseout', function() { inner.setStyle({ fillOpacity: 0.08 }); outer.setStyle({ fillOpacity: 0.04 }); });
+                ci.addTo(districtLayer);
+            });
+            L.marker(d.c, { pane: 'districtPane', interactive: false, keyboard: false,
+                icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div class="district-label">' + d.name + '</div>' }) }).addTo(districtLayer);
+        });
+        function updateDistrictLabels() { document.getElementById('map').classList.toggle('show-district-labels', map.getZoom() >= 14); }
+        map.on('zoomend', updateDistrictLabels);
+        updateDistrictLabels();
+
         // 철도망 렌더링 (노선 -> 역 순서로 그려 역이 노선 위에 선명하게 보이도록 함)
         transitNetwork.forEach(function(route) {
             var coords = route.stations.map(function(s) { return s.p; });
@@ -2396,11 +2469,11 @@
                     '<div><div class="summary-label">호가</div><div class="summary-val-blue">' + formatWonKr(item.askPriceWon) + '</div>' + targetPriceSubHtml(item) + '</div>' +
                     '<div><div class="summary-label">연면적평당가</div><div class="summary-val-dark">' + pricePyText + '</div></div>' +
                 '</div>' +
+                '<div class="comment-box"><div class="comment-title">💡 투자 코멘트</div><div class="comment-text' + (item.comment ? '' : ' empty') + '">' + (escHtml(item.comment) || '-') + '</div></div>' +
                 '<div class="detail-list">' +
                     '<div class="detail-item"><div class="detail-label">지번</div><div class="detail-val">' + (item.jibun || '-') + '</div></div>' +
                     '<div class="detail-item"><div class="detail-label">건물명칭</div><div class="detail-val">' + (item.name || '-') + '</div></div>' +
                     '<div class="detail-item"><div class="detail-label">주요 임차인</div><div class="detail-val multiline">' + (escHtml(item.tenants) || '-') + '</div></div>' +
-                    '<div class="detail-item"><div class="detail-label">투자 comment</div><div class="detail-val multiline">' + (escHtml(item.comment) || '-') + '</div></div>' +
                     '<div class="detail-item"><div class="detail-label">네이버로드뷰</div><div class="detail-val">' + (item.roadview ? '<a href="' + item.roadview + '" target="_blank" rel="noopener">로드뷰 열기 ↗</a>' : '-') + '</div></div>' +
                     '<div class="detail-item"><div class="detail-label">호가</div><div class="detail-val">' + formatWonKr(item.askPriceWon) + '</div></div>' +
                     '<div class="detail-item"><div class="detail-label">목표 협상 가격</div><div class="detail-val">' + (hasTargetPrice(item) ? formatTargetPrice(item) : 'TBD') + '</div></div>' +
@@ -2846,6 +2919,7 @@
             }
         });
 
+        document.getElementById('chk-district').onchange = function(e) { e.target.checked ? map.addLayer(districtLayer) : map.removeLayer(districtLayer); };
         document.getElementById('chk-transit').onchange = function(e) { e.target.checked ? map.addLayer(transitLayer) : map.removeLayer(transitLayer); };
 
         /* ==========================================================================
